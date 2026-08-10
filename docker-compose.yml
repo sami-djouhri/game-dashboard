@@ -1,0 +1,33 @@
+services:
+  game-dashboard:
+    build: .
+    image: homelab/game-dashboard:latest
+    container_name: game-dashboard
+    restart: unless-stopped
+    # LAN-only-Binding; oeffentlicher Zugang laeuft ausschliesslich ueber
+    # dev-portal (Authelia) + cloudflared. Nie direkt auf 0.0.0.0.
+    ports:
+      - "127.0.0.1:8144:8000"
+    environment:
+      SERVICE_NAME: game-dashboard
+      ENV: prod
+      LOG_LEVEL: INFO
+      AUTH_REQUIRED: "true"
+      # wake-bridge (Node .18, LAN-only). Token kommt aus .env (nie committen).
+      GAME_BRIDGE_URL: "http://192.0.2.10:8129"
+      GAME_BRIDGE_TOKEN: "${GAME_BRIDGE_TOKEN}"
+    networks:
+      - cc-core
+      - cc-apps
+    labels:
+      homelab.service: "game-dashboard"
+      homelab.category: "eigenbau"
+      homelab.route: "/game-dashboard/"
+
+networks:
+  cc-core:
+    external: true
+    name: cc-core
+  cc-apps:
+    external: true
+    name: cc-apps

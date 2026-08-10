@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Greenleaf · Game-Server</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🌿</text></svg>">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="leaf">🌿</span> Greenleaf <span class="sub">Game-Server</span></div>
+    <div class="node" id="node">
+      <span class="node-ram" id="node-ram">…</span>
+      <span class="role-badge" id="role-badge"></span>
+    </div>
+  </header>
+
+  <div class="slot-hint" id="slot-hint"></div>
+
+  <main id="grid" class="grid" aria-live="polite">
+    <div class="loading">lädt Status …</div>
+  </main>
+
+  <footer class="foot">
+    <span id="foot-status">—</span>
+    <span class="foot-note">Nur ein schwerer Server gleichzeitig · leere Server gehen nach ~20 min automatisch aus</span>
+  </footer>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
