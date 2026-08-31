@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Bewerben · {{ brand }}{% endblock %}
+{% block body %}
+<div class="wrap">
+  <div class="auth-wrap" style="max-width:560px">
+    <div class="panel">
+      <h1>Beim Clan bewerben</h1>
+      <p class="muted">{{ brand }} ist privat. Stell dich kurz vor, ein Admin schaut drüber und schickt dir einen Einladungslink.</p>
+      <form method="post" action="/apply">
+        <label for="name">Name / Discord-Handle *</label>
+        <input id="name" name="name" required autofocus maxlength="80" placeholder="z. B. Max oder max#0001">
+        <label for="contact">Kontakt (Discord / E-Mail)</label>
+        <input id="contact" name="contact" maxlength="120" placeholder="damit wir dich erreichen">
+        <label for="games">Welche Spiele reizen dich?</label>
+        <input id="games" name="games" maxlength="200" placeholder="z. B. Valheim, Factorio, DayZ">
+        <label for="message">Ein paar Worte zu dir</label>
+        <textarea id="message" name="message" maxlength="2000" placeholder="Wie hast du uns gefunden, was suchst du?"></textarea>
+        <div class="formbtns">
+          <button class="btn primary" type="submit">Bewerbung absenden</button>
+          <a class="btn ghost" href="/login">Ich habe schon einen Zugang</a>
+        </div>
+        <p class="hintline">Entschiedene Bewerbungen werden automatisch gelöscht.
+          Details in der <a href="/datenschutz">Datenschutzerklärung</a>.</p>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

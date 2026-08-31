@@ -1,0 +1,84 @@
+# LAUFZEIT-REZEPT gamehost (192.0.2.10) — hier laeuft die Clan-Seite wirklich.
+#
+# Diese Datei wird beim Ausrollen nach /opt/game-dashboard/docker-compose.yml gelegt,
+# also NEBEN Dockerfile und app/ (Build-Kontext "." ist die Projektwurzel dort, nicht
+# dieser Unterordner). Der Ordner hier existiert nur, damit der Live-Stand versioniert
+# ist — vor 2026-08-23 war er es nicht: er kam per rsync von host und wurde vor Ort
+# von Hand angepasst, ohne dass eine der Aenderungen je in einem Repo landete.
+#
+# Weicht bewusst vom host-Rezept (../docker-compose.yml) ab:
+#  * keine cc-Netzsegmentierung: die cc-core/cc-apps-Zonen gibt es nur auf host.
+#  * Welten-Ordner liegt hier unter /opt statt /home/user/docker.
+#  * GAME_BRIDGE_URL zeigt auf den eigenen Wirt: die wake-bridge auf .18 ist LAN-only
+#    und vom VPS aus bewusst NICHT erreichbar. Steuerbar wird erst, was hier laeuft.
+#  * Oeffentlicher Zugang laeuft ueber host-natives Caddy (TLS) statt dev-portal/cloudflared.
+services:
+  game-dashboard:
+    build: .
+    image: homelab/game-dashboard:latest
+    container_name: game-dashboard
+    restart: unless-stopped
+    # Nur Loopback; nach aussen geht ausschliesslich Caddy (games.saganta.de, Auto-TLS).
+    # Die App macht ihre Auth selbst (eigenes Login).
+    ports:
+      - "127.0.0.1:8144:8000"
+    environment:
+      SERVICE_NAME: game-dashboard
+      ENV: prod
+      LOG_LEVEL: INFO
+      BRAND_NAME: "Greenleaf"
+      PUBLIC_BASE_URL: "https://games.saganta.de"
+      # Cookie nur ueber HTTPS senden (Caddy terminiert TLS). Fuer reine http-Tests
+      # via GD_COOKIE_SECURE=false ueberschreibbar — auf einer oeffentlichen Seite nie.
+      COOKIE_SECURE: "${GD_COOKIE_SECURE:-true}"
+      # Owner-Bootstrap (leerer DB): kommt aus .env (nie committen). Ist owner_password
+      # leer, erzeugt der Start ein Zufallspasswort -> data/OWNER_CREDENTIALS.txt.
+      OWNER_USER: "${GD_OWNER_USER:-}"
+      OWNER_PASSWORD: "${GD_OWNER_PASSWORD:-}"
+      DEVELOPER_NAME: "${GD_DEVELOPER_NAME:-}"
+      COMMUNITY_DISCORD_URL: "${GD_DISCORD_URL:-}"
+      # Bewerbungs-Push in den Herb-#admin-Kanal (Discord-Webhook, aus .env).
+      ADMIN_WEBHOOK_URL: "${GD_ADMIN_WEBHOOK_URL:-}"
+      # DSGVO: entschiedene Bewerbungen automatisch loeschen (Tage).
+      APPLICATION_RETENTION_DAYS: "${GD_APPLICATION_RETENTION_DAYS:-30}"
+      # Impressum: volle Postanschrift optional aus .env (nie committen).
+      IMPRINT_ADDRESS: "${GD_IMPRINT_ADDRESS:-}"
+      # wake-bridge: laeuft hier host-nativ neben dem Dashboard. 127.0.0.1 waere das
+      # Loopback des CONTAINERS, nicht das des Wirts -- deshalb host.docker.internal
+      # (siehe extra_hosts). Token aus .env (nie committen).
+      GAME_BRIDGE_URL: "${GAME_BRIDGE_URL:-http://host.docker.internal:8129}"
+      GAME_BRIDGE_TOKEN: "${GAME_BRIDGE_TOKEN}"
+      # Gaming-Rollen-Automatik: der Greenleaf-Bot gleicht ueber /api/gaming/* ab,
+      # wer die Rolle traegt. Erreichbar nur ueber den SSH-Tunnel von node1, nie
+      # oeffentlich. Leer = Automatik aus (Endpunkt antwortet 503). Aus .env.
+      PROVISION_TOKEN: "${GD_PROVISION_TOKEN:-}"
+    extra_hosts:
+      # Der Wirt aus Sicht des Containers -- so erreicht das Dashboard die wake-bridge,
+      # ohne dass sie einen Port nach aussen oeffnen muesste.
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - game-dashboard-data:/app/data
+      # Welten-Snapshots, read-only im Container. Gefuellt wird der Ordner von
+      # welten-schnappschuss.timer auf DIESEM Wirt (taeglich 05:23, packt die
+      # laufenden Spielstaende nach /var/backups/game-saves und spiegelt hierher).
+      # Nicht mehr vom alten host-Timer: dessen Quelle .18 haelt nur eingefrorene
+      # Alt-Welten, seit die Spiele hier host-nativ laufen.
+      - /opt/game-dashboard/worlds:/app/data/worlds:ro
+    labels:
+      homelab.service: "game-dashboard"
+      homelab.category: "eigenbau"
+      homelab.route: "/game-dashboard/"
+
+networks:
+  # Festes Subnetz statt Auto-Vergabe: Docker kann sich sonst ein Netz greifen, das
+  # anderswo schon vergeben ist -- im Homelab hat genau das einmal das LAN verdeckt.
+  # Ausserdem braucht die ufw-Regel fuer Port 8129 eine Quelle, die morgen noch stimmt.
+  default:
+    name: game-dashboard_default
+    ipam:
+      config:
+        - subnet: 172.30.10.0/24
+
+volumes:
+  game-dashboard-data:
+    name: game-dashboard-data

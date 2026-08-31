@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Datenschutz · {{ brand }}{% endblock %}
+{% block body %}
+<div class="wrap">
+  <div class="legal-wrap">
+    <div class="panel">
+      <h1>Datenschutzerklärung</h1>
+      <p class="muted">Diese Seite ist eine private, selbst gehostete Community-Seite ohne Tracking,
+        ohne Werbung und ohne Analyse-Dienste. Hier steht vollständig, welche Daten anfallen und wann
+        sie wieder verschwinden.</p>
+
+      <h4 class="legal-h">Verantwortlicher</h4>
+      <p>{{ imprint_name }}, {{ imprint_location }}. E-Mail:
+        <a href="mailto:{{ imprint_email }}">{{ imprint_email }}</a> (siehe <a href="/impressum">Impressum</a>).</p>
+
+      <h4 class="legal-h">Hosting &amp; Server-Logs</h4>
+      <p>Die Seite läuft auf einem <b>gemieteten Server bei der netcup GmbH</b> (Karlsruhe). Der
+        Anbieter stellt die Maschine und ist insoweit Auftragsverarbeiter; betrieben wird sie von
+        uns selbst: es sitzt kein Gameserver-Anbieter mit Klick-Panel dazwischen. Beim Aufruf
+        verarbeitet der Server technisch notwendig deine IP-Adresse und Browser-Kennung
+        (Art. 6 Abs. 1 lit. f DSGVO, Betrieb und Absicherung). Anwendungs-Logs enthalten keine
+        dauerhaften Zugriffsprotokolle mit Personenbezug.</p>
+
+      <h4 class="legal-h">Sicherungen</h4>
+      <p>Von der Datenbank (Konten, Bewerbungen, Audit-Log) entstehen nächtliche Sicherungen. Sie
+        verlassen den Server <b>verschlüsselt</b> und liegen bei einem zweiten Anbieter außerhalb
+        des Rechenzentrums; dieser sieht ausschließlich verschlüsselte Daten und kann sie nicht
+        lesen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (Ausfallsicherheit). Alte Sicherungen
+        werden nach Ablauf der Aufbewahrungsfrist automatisch überschrieben. Löschst du dein Konto,
+        ist es <b>sofort</b> aus dem laufenden Betrieb entfernt; in einer bereits erstellten,
+        verschlüsselten Sicherung kann es bis zum Ablauf dieser Frist noch enthalten sein.</p>
+
+      <h4 class="legal-h">Bewerbungen</h4>
+      <p>Bewirbst du dich, speichern wir die von dir angegebenen Daten (Name/Discord, optional Kontakt,
+        Wunsch-Spiele, Nachricht) sowie die IP-Adresse als Spam-Schutz (Art. 6 Abs. 1 lit. b DSGVO).
+        <b>Entschiedene Bewerbungen (angenommen oder abgelehnt) werden nach {{ retention_days }} Tagen
+        automatisch gelöscht.</b> Bei Annahme wird zusätzlich ein Push an die Admins über einen
+        Discord-Webhook ausgelöst. Dabei werden Name, Wunsch-Spiele und Nachricht an Discord übertragen
+        (Discord Inc., eigener Anbieter mit eigener Datenschutzerklärung), deine Kontaktdaten nicht.</p>
+
+      <h4 class="legal-h">Mitglieds-Konto</h4>
+      <p>Als Mitglied speichern wir Benutzername, Anzeigename, Passwort (nur als argon2id-Hash), Rolle,
+        Anmeldezeitpunkte sowie serverseitige Sitzungen (mit IP und Browser-Kennung, Ablauf nach
+        {{ session_ttl_days }} Tagen). Rechtsgrundlage ist die Mitgliedschaft (Art. 6 Abs. 1 lit. b DSGVO).</p>
+
+      <h4 class="legal-h">Cookies</h4>
+      <p>Es gibt genau ein Cookie: das Sitzungs-Cookie nach dem Login (technisch notwendig, HttpOnly).
+        Kein Consent-Banner nötig, weil nichts anderes gesetzt wird.</p>
+
+      <h4 class="legal-h">Audit-Log</h4>
+      <p>Sicherheitsrelevante Aktionen (Login, Server-Start/-Stopp, Admin-Entscheidungen) werden mit
+        Benutzernamen protokolliert (Art. 6 Abs. 1 lit. f DSGVO, Nachvollziehbarkeit des Betriebs).
+        Beim Löschen deines Kontos werden diese Einträge anonymisiert.</p>
+
+      <h4 class="legal-h">Konto selbst löschen</h4>
+      <p>Du kannst dein Konto jederzeit unter <a href="/account">Account</a> selbst löschen
+        (Passwort-Bestätigung). Dabei werden dein Konto und alle Sitzungen sofort gelöscht und
+        Log-Einträge anonymisiert. Alternativ genügt eine formlose E-Mail.</p>
+
+      <h4 class="legal-h">Deine Rechte</h4>
+      <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
+        Datenübertragbarkeit und Widerspruch (Art. 15–21 DSGVO) sowie auf Beschwerde bei einer
+        Aufsichtsbehörde. Eine E-Mail an die obige Adresse genügt.</p>
+
+      <h4 class="legal-h">Keine Drittanbieter in der Seite</h4>
+      <p>Die Seite lädt nichts von fremden Servern nach: keine externen Fonts, keine CDNs, kein
+        Tracking, keine Analyse-Dienste. Beteiligt sind außerhalb der Seite selbst nur die oben
+        genannten Stellen (Hoster und Sicherungs-Anbieter) sowie der Discord-Webhook für
+        Bewerbungs-Benachrichtigungen und ausgehende Links (z.&nbsp;B. zu Steam).</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

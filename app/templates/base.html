@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0f0c">
+  <title>{% block title %}{{ brand }} · Game-Cluster{% endblock %}</title>
+  {# ★ Maschinenlesbare Felder zuerst pruefen: hier stand „im eigenen Homelab" noch,
+     als der Fliesstext auf der Landing am 24.08. schon korrigiert war. Niemand liest
+     diese Zeile auf der Seite — Suchmaschinen und Linkvorschauen zeigen aber genau sie. #}
+  <meta name="description" content="{{ brand }}, privater Game-Cluster auf einem eigenen Server. Beitritt auf Bewerbung.">
+  {% if principal %}<meta name="csrf" content="{{ csrf }}">{% endif %}
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%2364d178' d='M13.5 2.5C9 2 4.5 4 3.2 8.6c-.8 2.8.4 4.6 1 5.2.3-2.4 1.3-5.6 4.6-7.9-2.4 2.6-3.4 5.3-3.7 8 .8.3 2.5.6 4.2-.2 3.9-1.8 4.6-7 4.2-11.2z'/%3E%3C/svg%3E">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" style="color:inherit">
+      <svg class="leaf" viewBox="0 0 16 16" aria-hidden="true"><path fill="var(--leaf)" d="M13.5 2.5C9 2 4.5 4 3.2 8.6c-.8 2.8.4 4.6 1 5.2.3-2.4 1.3-5.6 4.6-7.9-2.4 2.6-3.4 5.3-3.7 8 .8.3 2.5.6 4.2-.2 3.9-1.8 4.6-7 4.2-11.2z"/></svg>
+      {{ brand }}
+      <span class="sub">· Game-Cluster</span>
+    </a>
+    <nav class="nav">
+      <a href="/guides" class="{% block nav_guides %}{% endblock %}">Guides</a>
+      {% if principal %}
+        <a href="/app" class="{% block nav_app %}{% endblock %}">Server</a>
+        {% if principal.is_admin %}
+          <a href="/admin" class="{% block nav_admin %}{% endblock %}">Admin{% if pending_count %}<span class="notif">{{ pending_count }}</span>{% endif %}</a>
+        {% endif %}
+        <a href="/account">Account</a>
+        <span class="role-badge {{ principal.role }}">
+          {% if principal.role == 'owner' %}Owner{% elif principal.role == 'admin' %}Admin{% else %}Mitglied{% endif %}
+          {%- if principal.verified and not principal.is_admin %} ✓{% endif %}
+        </span>
+        <form method="post" action="/logout" class="inline-form">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button class="btn ghost tiny" type="submit">Abmelden</button>
+        </form>
+      {% else %}
+        <a href="/login">Login</a>
+        <a href="/apply" class="btn primary tiny">Bewerben</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  {% if flash %}<div class="wrap"><div class="flash">{{ flash }}</div></div>{% endif %}
+  {% if flash_err %}<div class="wrap"><div class="flash err">{{ flash_err }}</div></div>{% endif %}
+
+  {% block body %}{% endblock %}
+
+  <footer class="foot">
+    <div class="wrap">
+      <span class="credit">
+        {% if dev_name %}Entworfen &amp; betrieben von <b>{{ dev_name }}</b>{% else %}{{ dev_credit }}{% endif %}
+      </span>
+      <span class="legal"><a href="/impressum">Impressum</a> · <a href="/datenschutz">Datenschutz</a></span>
+      <span class="meta">{{ brand }} · self-hosted · v{{ version }}</span>
+    </div>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

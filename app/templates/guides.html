@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% import "_scenes.html" as sc %}
+{% block title %}Beitritts-Anleitungen · {{ brand }}{% endblock %}
+{% block nav_guides %}here{% endblock %}
+{% block body %}
+<div class="wrap">
+  <section class="section" style="padding-top:30px">
+    <div class="section-title"><h2>So trittst du bei</h2><span class="hint">Client installieren → verbinden</span></div>
+
+    <nav class="chips jump" aria-label="Zu einem Spiel springen">
+      {% for g in guides %}
+      <a class="chip" href="#guide-{{ g.key }}" style="--gac: {{ g.color }}">{{ g.label }}</a>
+      {% endfor %}
+    </nav>
+
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(340px,1fr))">
+      {% for g in guides %}
+      <div class="guide" id="guide-{{ g.key }}" style="--gac: {{ g.color }}">
+        <h3>{{ sc.mark(g.key) }} {{ g.label }}</h3>
+        <div class="plat">{{ g.platform }} · Welt „{{ g.world }}“</div>
+
+        <h4>Client</h4>
+        <ol>{% for step in g.install %}<li>{{ step|md }}</li>{% endfor %}</ol>
+        {% if g.store %}<a class="btn ghost tiny" href="{{ g.store }}" target="_blank" rel="noopener">{{ g.client }} ↗</a>{% endif %}
+
+        <h4>Beitreten</h4>
+        <ol>{% for step in g.join %}<li>{{ step|md }}</li>{% endfor %}</ol>
+        {% if g.address %}
+        <div class="addr">📍 <span class="addr-text">{{ g.address }}</span><button class="copy tiny" type="button" data-copy="{{ g.address }}" title="Adresse kopieren">Kopieren</button></div>
+        {% else %}
+        <div class="addr masked">🔒 <span class="addr-text">Server-Adresse siehst du als Mitglied nach dem <a href="/login">Login</a></span></div>
+        {% endif %}
+
+        {% if g.notes %}
+        <details class="notes">
+          <summary>Gut zu wissen</summary>
+          <ul>{% for n in g.notes %}<li>{{ n|md }}</li>{% endfor %}</ul>
+        </details>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% if not principal %}
+    <p class="hintline" style="margin-top:20px">Server-Passwörter & Live-Steuerung siehst du nach dem Beitritt. <a href="/apply">Jetzt bewerben →</a></p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/guides.js"></script>{% endblock %}

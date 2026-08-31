@@ -1,0 +1,25 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+# OS
+.DS_Store
+# Laufzeitdaten / Welten-Snapshots (nur .gitkeep bleibt)
+data/
+worlds/*
+!worlds/.gitkeep
+
+# Lokaler Preview-Override (LAN/WG-Binding), nie committen
+docker-compose.override.yml
+
+# Sicht-Pruefstand (scripts/ansehen.sh)
+.ansehen/

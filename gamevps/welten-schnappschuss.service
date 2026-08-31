@@ -1,0 +1,9 @@
+[Unit]
+Description=Welt-Schnappschuesse der Spielserver + Spiegel fuer die Clan-Seite
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/welten-schnappschuss.sh
+Nice=10
+IOSchedulingClass=idle

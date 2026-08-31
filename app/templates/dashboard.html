@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% import "_scenes.html" as sc %}
+{% block title %}Server · {{ brand }}{% endblock %}
+{% block nav_app %}here{% endblock %}
+{% block body %}
+<div class="wrap">
+  <section class="section" style="padding-top:26px">
+    <div class="section-title">
+      <h2>Server</h2>
+      <span class="hint"><span id="node-ram">…</span></span>
+    </div>
+    <div class="banner warn" id="slot-hint"></div>
+    <main id="grid" class="grid" aria-live="polite">
+      <div class="card skel"></div><div class="card skel"></div><div class="card skel"></div>
+    </main>
+    <p class="hintline" style="margin-top:14px">Mehrere Server dürfen zusammen laufen, solange der Arbeitsspeicher reicht. Leere gehen nach etwa 20 Minuten von selbst aus. Wer spielt, wird dabei nie verdrängt. <a href="/guides">Beitritts-Anleitungen</a></p>
+  </section>
+
+  {% if feed or playtime %}
+  <section class="section">
+    <div class="section-title"><h2>Zuletzt gespielt</h2><span class="hint">aus dem Server-Log, minutengenau</span></div>
+    <div class="activity-grid">
+      <div class="panel feed-panel">
+        {% if feed %}
+        <ul class="feed">
+          {% for s in feed %}
+          <li style="--gac: {{ s.color }}">
+            <span class="feed-dot{% if s.running %} live{% endif %}"></span>
+            <span class="feed-when">{{ s.day }} {{ s.start }}</span>
+            <b>{{ s.label }}</b>
+            {% if s.world %}<span class="feed-world">{{ s.world|capitalize }}</span>{% endif %}
+            <span class="feed-len">{% if s.running %}läuft gerade{% else %}{{ s.duration }}{% endif %}{% if s.peak %} · bis zu {{ s.peak }} im Spiel{% endif %}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted" style="margin:0">Noch nichts aufgezeichnet. Sobald ein Server läuft, taucht er hier auf.</p>
+        {% endif %}
+      </div>
+      <div class="panel">
+        <h3 class="panel-h">Spielzeit, letzte 30 Tage</h3>
+        {% if playtime %}
+        <div class="ptbars">
+          {% for p in playtime %}
+          <div class="ptrow" style="--gac: {{ p.color }}">
+            <span class="ptlabel">{{ p.label }}</span>
+            <span class="ptbar"><i style="width: {{ (100 * p.hours / max_hours)|round(0) if max_hours else 0 }}%"></i></span>
+            <span class="ptval">{{ p.hours_h }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted" style="margin:0">Noch keine Spielzeit erfasst.</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if downloads_enabled %}
+  <section class="section">
+    <div class="section-title"><h2>Welten-Downloads</h2><span class="hint">nächtliche Sicherungen, ein Archiv je Welt</span></div>
+    {% if principal.can_download %}
+      {% if world_groups %}
+        <div class="grid dlgrid">
+          {% for g in world_groups %}
+          <div class="dlgroup" style="--gac: {{ g.color }}">
+            <div class="dlhead">{{ sc.mark(g.key) }}<b>{{ g.label }}</b></div>
+            {% for w in g.worlds %}
+            <div class="dlrow">
+              <div class="meta">
+                <b>{{ (w.world|capitalize) if w.per_world else (w.world or g.label) }}</b>
+                <div class="sub">{{ w.size }} · Stand {{ w.updated[:10] }}</div>
+              </div>
+              <a class="btn ghost tiny" href="/api/worlds/{{ g.key }}/download{% if w.per_world %}?world={{ w.world }}{% endif %}">Herunterladen</a>
+            </div>
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="panel"><p class="muted" style="margin:0">Noch keine Sicherungen da, sie entstehen nachts automatisch.</p></div>
+      {% endif %}
+    {% else %}
+      <div class="panel"><p class="muted" style="margin:0">Welten-Downloads gibt es für <b style="color:var(--text)">verifizierte Mitglieder</b>. Frag einen Admin um Freischaltung.</p></div>
+    {% endif %}
+  </section>
+  {% endif %}
+</div>
+{% include "_scenestore.html" %}
+{% endblock %}
+{% block scripts %}<script src="/static/app.js"></script>{% endblock %}

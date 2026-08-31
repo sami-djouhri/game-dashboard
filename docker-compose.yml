@@ -1,0 +1,72 @@
+services:
+  game-dashboard:
+    # STILLGELEGT seit 2026-08-22: die Clan-Seite laeuft auf dem Spiele-VPS unter
+    # games.saganta.de. Zwei laufende Instanzen heissen ZWEI SQLite-Datenbanken --
+    # Konten, Rollen, verified-Kennzeichen, Bewerbungen. Wer sich oeffentlich anmeldet,
+    # landet in der einen; wer im LAN etwas aendert, in der anderen, und niemand merkt es.
+    # Das profile sorgt dafuer, dass ein gewoehnliches docker compose up -d hier nichts
+    # startet. Wer die Instanz wirklich braucht (Notfall-Rueckfall, das Datenvolumen
+    # game-dashboard-data steht noch):
+    #     docker compose --profile rueckfall up -d
+    # Vorher klaeren, welche der beiden Datenbanken dann die gueltige ist.
+    profiles: ["rueckfall"]
+    build: .
+    image: homelab/game-dashboard:latest
+    container_name: game-dashboard
+    restart: unless-stopped
+    # LAN-only-Binding; oeffentlicher Zugang laeuft ausschliesslich ueber
+    # dev-portal + cloudflared. Die App macht ihre Auth selbst (eigenes Login).
+    ports:
+      - "127.0.0.1:8144:8000"
+    environment:
+      SERVICE_NAME: game-dashboard
+      ENV: prod
+      LOG_LEVEL: INFO
+      BRAND_NAME: "Greenleaf"
+      PUBLIC_BASE_URL: "https://games.saganta.de"
+      # Cookie nur ueber HTTPS senden (extern via cloudflared TLS). Fuer reine
+      # LAN-http-Tests via GD_COOKIE_SECURE=false ueberschreibbar.
+      COOKIE_SECURE: "${GD_COOKIE_SECURE:-true}"
+      # Owner-Bootstrap (leerer DB): kommt aus .env (nie committen). Ist owner_password
+      # leer, erzeugt der Start ein Zufallspasswort -> data/OWNER_CREDENTIALS.txt.
+      OWNER_USER: "${GD_OWNER_USER:-}"
+      OWNER_PASSWORD: "${GD_OWNER_PASSWORD:-}"
+      DEVELOPER_NAME: "${GD_DEVELOPER_NAME:-}"
+      COMMUNITY_DISCORD_URL: "${GD_DISCORD_URL:-}"
+      # Bewerbungs-Push in den Herb-#admin-Kanal (Discord-Webhook, aus .env).
+      ADMIN_WEBHOOK_URL: "${GD_ADMIN_WEBHOOK_URL:-}"
+      # DSGVO: entschiedene Bewerbungen automatisch loeschen (Tage).
+      APPLICATION_RETENTION_DAYS: "${GD_APPLICATION_RETENTION_DAYS:-30}"
+      # Impressum: volle Postanschrift optional aus .env (nie committen).
+      IMPRINT_ADDRESS: "${GD_IMPRINT_ADDRESS:-}"
+      # wake-bridge. ACHTUNG, diese Instanz kann NICHT steuern: die Spiele laufen
+      # seit 2026-08-22 auf gamehost, dessen Bridge nur ueber den SSH-Tunnel von
+      # node1 erreichbar ist -- nicht von host. Node .18 haelt keine Spielrolle
+      # mehr, seine Bridge beantwortet nur noch das Windows-Lab. Ein Rueckfall hier
+      # zeigt also die Seite, aber die Steuerung meldet ehrlich "nicht erreichbar".
+      # Wer wirklich steuern will, braucht zuerst einen Tunnel. Token aus .env.
+      GAME_BRIDGE_URL: "${GAME_BRIDGE_URL:-http://192.0.2.10:8129}"
+      GAME_BRIDGE_TOKEN: "${GAME_BRIDGE_TOKEN}"
+    volumes:
+      - game-dashboard-data:/app/data
+      # Welten-Snapshots: ein Host-Timer auf host spiegelt sie hierher (read-only im Container).
+      - /home/user/docker/game-dashboard/worlds:/app/data/worlds:ro
+    networks:
+      - cc-core
+      - cc-apps
+    labels:
+      homelab.service: "game-dashboard"
+      homelab.category: "eigenbau"
+      homelab.route: "/game-dashboard/"
+
+networks:
+  cc-core:
+    external: true
+    name: cc-core
+  cc-apps:
+    external: true
+    name: cc-apps
+
+volumes:
+  game-dashboard-data:
+    name: game-dashboard-data

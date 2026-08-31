@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Admin · {{ brand }}{% endblock %}
+{% block nav_admin %}here{% endblock %}
+{% block body %}
+<div class="wrap">
+
+  <!-- Live-Status + Steuerung -->
+  <section class="section" style="padding-top:24px">
+    <div class="section-title"><h2>Live</h2><span class="hint"><span id="node-ram">…</span></span></div>
+    <div class="banner warn" id="slot-hint"></div>
+    <main id="grid" class="grid" aria-live="polite">
+      <div class="card skel"></div><div class="card skel"></div><div class="card skel"></div>
+    </main>
+  </section>
+
+  <div class="stat-row">
+    <div class="stat"><div class="n">{{ pending_count }}</div><div class="l">offene Bewerbungen</div></div>
+    <div class="stat"><div class="n">{{ users|length }}</div><div class="l">Mitglieder gesamt</div></div>
+    <div class="stat"><div class="n">{{ invites|selectattr('revoked','equalto',0)|list|length }}</div><div class="l">Einladungen</div></div>
+  </div>
+
+  <!-- Bewerbungen -->
+  <section class="section" style="padding-top:10px">
+    <div class="section-title"><h2>Bewerbungen</h2></div>
+    <div class="panel" style="padding:6px 14px">
+      <table class="tbl">
+        <thead><tr><th>Wer</th><th>Kontakt</th><th>Spiele</th><th>Nachricht</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for a in applications %}
+          <tr>
+            <td><b>{{ a.name }}</b><div class="mono">{{ a.created_at[:16].replace('T',' ') }}</div></td>
+            {# ★ Hier stand bis 2026-08-27 ein einzelnes Komma. Ursache: der Sweep in
+               ca7ed82 („Emdashes aus Kommentaren und Meldungen entfernt") wandte die
+               Owner-Regel (Emdash durch Komma ersetzen) auch auf Stellen an, an denen
+               das Zeichen kein Satzzeichen war, sondern das Symbol für „nichts
+               vorhanden". Ein Komma allein in einer Tabellenzelle liest sich wie ein
+               Datenfehler. Ersatz ist der Halbgeviertstrich U+2013: ein anderes
+               Zeichen als der Emdash U+2014, das die Regel nicht beruehrt. Bitte
+               nicht erneut mitschleifen. #}
+            <td>{{ a.contact or '–' }}</td>
+            <td>{{ a.games or '–' }}</td>
+            <td style="max-width:280px">{{ a.message or '–' }}</td>
+            <td><span class="tag {{ a.status }}">{{ a.status }}</span>
+                {% if a.invite_code %}<div class="mono">{{ join_base }}/join/{{ a.invite_code }}</div>{% endif %}</td>
+            <td style="white-space:nowrap">
+              {% if a.status == 'pending' %}
+                <form class="inline-form" method="post" action="/admin/applications/{{ a.id }}/approve">
+                  <input type="hidden" name="csrf" value="{{ csrf }}">
+                  <button class="primary tiny" type="submit">Annehmen</button>
+                </form>
+                <form class="inline-form" method="post" action="/admin/applications/{{ a.id }}/reject">
+                  <input type="hidden" name="csrf" value="{{ csrf }}">
+                  <button class="danger tiny" type="submit">Ablehnen</button>
+                </form>
+              {% else %}–{% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" style="color:var(--dim);padding:16px">Keine Bewerbungen.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Einladungen -->
+  <section class="section" style="padding-top:10px">
+    <div class="section-title"><h2>Einladungen</h2><span class="hint">Link direkt an Freunde schicken</span></div>
+    <div class="panel" style="margin-bottom:14px">
+      <form method="post" action="/admin/invites">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <div class="form-row">
+          <div><label>Rolle</label>
+            <select name="role">
+              <option value="member">Mitglied</option>
+              {% if principal.is_owner %}<option value="admin">Admin</option>{% endif %}
+            </select>
+          </div>
+          <div><label>Nutzungen</label><input name="max_uses" type="number" value="1" min="1" max="50"></div>
+          <div><label>Gültig (Tage, 0=unbegrenzt)</label><input name="expires_days" type="number" value="14" min="0"></div>
+          <div><label>Notiz</label><input name="note" placeholder="z. B. für Max"></div>
+        </div>
+        <div class="check"><input type="checkbox" id="iv" name="verified" value="1"><label for="iv">gleich verifiziert (darf Welten laden)</label></div>
+        <div class="formbtns"><button class="btn primary" type="submit">Einladung erstellen</button></div>
+      </form>
+    </div>
+    <div class="panel" style="padding:6px 14px">
+      <table class="tbl">
+        <thead><tr><th>Link</th><th>Rolle</th><th>Nutzung</th><th>Läuft ab</th><th>Notiz</th><th></th></tr></thead>
+        <tbody>
+        {% for i in invites %}
+          <tr>
+            <td class="mono">/join/{{ i.code }}</td>
+            <td><span class="tag {% if i.role=='admin' %}pending{% else %}approved{% endif %}">{{ i.role }}</span>{% if i.verified %} ✓{% endif %}</td>
+            <td>{{ i.uses }}/{{ i.max_uses }}</td>
+            {# Leeres expires_at heisst nicht „keine Angabe", sondern „laeuft nie ab"
+               (Formularfeld 0 = unbegrenzt). Ein Strich in der Spalte „Laeuft ab" liest
+               sich wie fehlende Daten und verschweigt genau die Einladung, die man im
+               Blick behalten will. #}
+            <td class="mono">{{ i.expires_at[:10] if i.expires_at else 'unbegrenzt' }}</td>
+            <td>{{ i.note or '–' }}</td>
+            <td>
+              {% if i.revoked %}<span class="tag off">zurückgezogen</span>
+              {% elif i.uses >= i.max_uses %}<span class="tag">aufgebraucht</span>
+              {% else %}
+                <form class="inline-form" method="post" action="/admin/invites/{{ i.id }}/revoke">
+                  <input type="hidden" name="csrf" value="{{ csrf }}">
+                  <button class="danger tiny" type="submit">Zurückziehen</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" style="color:var(--dim);padding:16px">Keine Einladungen.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Mitglieder -->
+  <section class="section" style="padding-top:10px">
+    <div class="section-title"><h2>Mitglieder</h2></div>
+    <div class="panel" style="padding:6px 14px">
+      <table class="tbl">
+        <thead><tr><th>Nutzer</th><th>Rolle</th><th>Verifiziert</th><th>Zuletzt</th><th>Aktionen</th></tr></thead>
+        <tbody>
+        {% for u in users %}
+          <tr {% if u.disabled %}style="opacity:.5"{% endif %}>
+            <td><b>{{ u.display_name }}</b> <span class="mono">@{{ u.username }}</span>{% if u.disabled %} <span class="tag off">gesperrt</span>{% endif %}</td>
+            <td>
+              {% if u.role == 'owner' %}<span class="role-badge owner">Owner</span>
+              {% elif u.role == 'admin' %}<span class="role-badge admin">Admin</span>
+              {% else %}<span class="tag">Mitglied</span>{% endif %}
+            </td>
+            <td>
+              {# Owner und Admins duerfen Welten immer laden (can_download = verified
+                 ODER is_admin). Die Zelle sagt das jetzt, statt leer zu wirken. #}
+              {% if u.role in ('owner','admin') %}<span class="muted">immer</span>
+              {% else %}
+                <form class="inline-form" method="post" action="/admin/users/{{ u.id }}/verify">
+                  <input type="hidden" name="csrf" value="{{ csrf }}">
+                  <input type="hidden" name="value" value="{{ 0 if u.verified else 1 }}">
+                  <button class="tiny {% if u.verified %}warn{% else %}primary{% endif %}" type="submit">{{ 'entziehen' if u.verified else 'verifizieren' }}</button>
+                </form>
+              {% endif %}
+            </td>
+            {# „nie" ist eine Aussage, ein Strich waere keine: ein Konto, das noch nie
+               benutzt wurde, ist genau das, wonach man in dieser Spalte sucht. #}
+            <td class="mono">{{ u.last_login_at[:16].replace('T',' ') if u.last_login_at else 'nie angemeldet' }}</td>
+            <td style="white-space:nowrap">
+              {% if u.role != 'owner' and u.id != principal.id %}
+                {% if principal.is_owner or u.role == 'member' %}
+                <form class="inline-form" method="post" action="/admin/users/{{ u.id }}/disable">
+                  <input type="hidden" name="csrf" value="{{ csrf }}">
+                  <input type="hidden" name="value" value="{{ 0 if u.disabled else 1 }}">
+                  <button class="tiny ghost" type="submit">{{ 'entsperren' if u.disabled else 'sperren' }}</button>
+                </form>
+                {% endif %}
+                {% if principal.is_owner %}
+                  <form class="inline-form" method="post" action="/admin/users/{{ u.id }}/role">
+                    <input type="hidden" name="csrf" value="{{ csrf }}">
+                    <input type="hidden" name="role" value="{{ 'member' if u.role == 'admin' else 'admin' }}">
+                    <button class="tiny warn" type="submit">{{ 'zu Mitglied' if u.role == 'admin' else 'zu Admin' }}</button>
+                  </form>
+                  <form class="inline-form" method="post" action="/admin/users/{{ u.id }}/delete" onsubmit="return confirm('{{ u.username }} wirklich löschen?')">
+                    <input type="hidden" name="csrf" value="{{ csrf }}">
+                    <button class="tiny danger" type="submit">löschen</button>
+                  </form>
+                {% endif %}
+              {% else %}–{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Verlauf -->
+  <section class="section" style="padding-top:10px;padding-bottom:40px">
+    <div class="section-title"><h2>Verlauf</h2></div>
+    <div class="panel" style="padding:6px 14px">
+      <table class="tbl">
+        <tbody>
+        {% for e in events %}
+          <tr><td class="mono" style="width:150px">{{ e.ts[:16].replace('T',' ') }}</td>
+              <td style="width:130px">{{ e.actor }}</td>
+              <td><span class="tag">{{ e.action }}</span></td>
+              <td class="mono">{{ e.detail }}</td></tr>
+        {% else %}
+          <tr><td style="color:var(--dim);padding:16px">Noch nichts protokolliert.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% include "_scenestore.html" %}
+{% endblock %}
+{% block scripts %}<script src="/static/app.js"></script>{% endblock %}

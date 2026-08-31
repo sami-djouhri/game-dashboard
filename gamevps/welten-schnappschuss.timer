@@ -1,0 +1,15 @@
+[Unit]
+Description=Welt-Schnappschuesse taeglich um 04:15 (vor dem Off-Site-Backup)
+
+[Timer]
+# 04:15 und nicht mehr 05:20: der Spiegel unter /opt/game-dashboard/worlds liegt im
+# restic-Pfadsatz (restic sichert /opt). Lief der Schnappschuss NACH restic (04:45), ging
+# immer der Stand vom Vortag off-site -- im Ernstfall ein ganzer Tag Spielfortschritt mehr
+# verloren, ohne Gegenwert. Der Lauf selbst dauert rund 30 Sekunden; mit der Streuung ist er
+# spaetestens 04:20 fertig, restic startet fruehestens 04:45.
+OnCalendar=*-*-* 04:15:00
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Zugang einrichten · {{ brand }}{% endblock %}
+{% block body %}
+<div class="wrap">
+  <div class="auth-wrap">
+    <div class="panel">
+      {% if invalid %}
+        <h1>Einladung ungültig</h1>
+        <p class="muted">{{ invalid }}</p>
+        <a class="btn ghost" href="/apply">Stattdessen bewerben</a>
+      {% else %}
+        <h1>Willkommen bei {{ brand }}</h1>
+        <p class="muted">
+          Du wurdest eingeladen{% if invite.note %} ({{ invite.note }}){% endif %}. Richte deinen Zugang ein.
+          {% if invite.role == 'admin' %}<br><b style="color:var(--amber)">Diese Einladung gibt Admin-Rechte.</b>{% endif %}
+        </p>
+        {% if err %}<div class="flash err">{{ err }}</div>{% endif %}
+        <form method="post" action="/join/{{ code }}">
+          <label for="u">Benutzername *</label>
+          <input id="u" name="username" required autofocus pattern="[A-Za-z0-9_\-]{3,24}" placeholder="3–24 Zeichen">
+          <label for="d">Anzeigename (optional)</label>
+          <input id="d" name="display_name" maxlength="40" placeholder="wie du genannt werden willst">
+          <div class="form-row">
+            <div>
+              <label for="p">Passwort *</label>
+              <input id="p" name="password" type="password" autocomplete="new-password" required minlength="8">
+            </div>
+            <div>
+              <label for="p2">Passwort wiederholen *</label>
+              <input id="p2" name="password2" type="password" autocomplete="new-password" required minlength="8">
+            </div>
+          </div>
+          <div class="formbtns">
+            <button class="btn primary" type="submit">Zugang erstellen &amp; loslegen</button>
+          </div>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

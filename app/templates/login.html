@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Login · {{ brand }}{% endblock %}
+{% block body %}
+<div class="wrap">
+  <div class="auth-wrap">
+    <div class="panel">
+      <h1>Willkommen zurück</h1>
+      <p class="muted">Melde dich an, um die Server zu sehen und zu starten.</p>
+      <form method="post" action="/login">
+        <label for="u">Benutzername</label>
+        <input id="u" name="username" autocomplete="username" autofocus required>
+        <label for="p">Passwort</label>
+        <input id="p" name="password" type="password" autocomplete="current-password" required>
+        <div class="formbtns">
+          <button class="btn primary" type="submit">Anmelden</button>
+          <a class="btn ghost" href="/apply">Noch kein Zugang? Bewerben</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

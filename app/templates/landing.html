@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% import "_scenes.html" as sc %}
+{% block title %}{{ brand }} · privater Game-Cluster{% endblock %}
+
+{% block body %}
+<section class="hero">
+  <!-- Zweilagige Waldsilhouette, rein dekorativ (Inline-SVG, kein Asset) -->
+  <svg class="hero-forest" viewBox="0 0 1200 160" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#0e2013" d="M0,160 L0,120 L40,116 L60,84 L80,118 L120,110 L150,60 L180,112 L220,104 L250,70 L285,110 L330,100 L360,52 L395,104 L440,96 L470,64 L505,102 L560,92 L600,40 L640,96 L690,88 L720,58 L755,96 L800,86 L840,46 L880,92 L930,84 L960,56 L995,92 L1040,82 L1080,50 L1115,88 L1160,80 L1200,110 L1200,160 Z"/>
+    <path fill="#12301b" d="M0,160 L0,140 L50,134 L80,104 L110,136 L160,128 L200,86 L240,132 L290,124 L320,94 L355,128 L410,120 L450,78 L490,124 L540,116 L575,90 L610,122 L665,114 L700,72 L740,118 L790,110 L825,84 L860,116 L915,108 L950,68 L990,114 L1040,106 L1075,82 L1110,114 L1160,106 L1200,130 L1200,160 Z"/>
+  </svg>
+  <div class="wrap">
+    <div class="hero-live" id="hero-live">
+      <span class="dot" id="hero-dot"></span> <span id="hero-live-text">verbinde …</span>
+    </div>
+    <div class="kicker">{{ tagline }}</div>
+    <h1>{{ brand }}</h1>
+    {# „auf eigener Hardware" stand hier bis 2026-08-27 und stimmte seit dem Umzug am
+       22.08. nicht mehr: die Spiele liegen auf einem gemieteten Server (gemessen: KVM,
+       QEMU-CPU). Der Unterschied, der bleibt und gemeint war, steht weiter unten schon
+       richtig — eigener Server statt Mietbox mit Klick-Panel. #}
+    <p class="lead">{{ guides|length }} Spielwelten auf einem eigenen Server. Server anklicken, kurz warten, drin. Und wenn keiner mehr spielt, geht das Licht von allein aus.</p>
+    <div class="cta">
+      {% if principal %}
+        <a class="btn primary big" href="/app">Zu den Servern →</a>
+      {% else %}
+        <a class="btn primary big" href="/apply">Bewerben</a>
+        <a class="btn ghost big" href="/login">Login</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-title"><h2>Die Welten</h2><span class="hint">live · <a href="/guides">Beitritts-Anleitungen →</a></span></div>
+    <div class="grid" id="world-grid">
+      {% for g in guides %}
+      <div class="card world-card" id="world-{{ g.key }}" style="--gac: {{ g.color }}">
+        {{ sc.banner(g.key) }}
+        <div class="card-head">
+          <div>
+            <div class="card-title">{{ g.label }}</div>
+            <div class="card-slots">{{ g.platform }}</div>
+          </div>
+          <span class="badge sleeping" data-live="badge">bereit</span>
+        </div>
+        <div class="card-meta">Welt: <b style="color:var(--text)">{{ g.world }}</b></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-title"><h2>So läuft das hier</h2><span class="hint">eigener Server, kein Gameserver-Hoster</span></div>
+    <div class="facts">
+      <p>Alle Welten liegen auf einem eigenen Server, jedes Spiel unter seinem eigenen Konto und
+        direkt auf dem System statt in einer Mietbox mit Klick-Panel. Laufen darf alles, was
+        zusammen in den Arbeitsspeicher passt, nur eben nicht rund um die Uhr, wenn niemand
+        da ist.</p>
+      <p>Gestartet wird per Klick hier auf der Seite oder über Discord. Nach ein bis drei Minuten
+        ist der Server da; steht er zwanzig Minuten leer, fährt er sich selbst wieder herunter.
+        Die Spielerzahl wird dafür wirklich gemessen, nicht geraten.</p>
+      <p>Schlafende Server verschwinden trotzdem nicht aus der Serverliste: an ihrer Stelle
+        antwortet ein Platzhalter, der sie beim Beitrittsversuch weckt. Und jeder Spielstand wird
+        nachts gesichert: verschlüsselt, außer Haus, auf zwei voneinander getrennten Wegen.</p>
+    </div>
+  </div>
+</section>
+
+{% if not principal %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-title"><h2>Mitglied werden</h2><span class="hint">privat, Beitritt wie in einem Clan</span></div>
+    <div class="steps">
+      <div class="step" style="--gac: #58c98b">
+        <span class="num">1</span>
+        <b>Bewerben</b>
+        <p>Kurz vorstellen: wer du bist und was du spielen willst.</p>
+      </div>
+      <div class="step" style="--gac: #e0913f">
+        <span class="num">2</span>
+        <b>Einladung erhalten</b>
+        <p>Ein Admin schaut drüber und schickt dir deinen Einladungslink.</p>
+      </div>
+      <div class="step" style="--gac: #6ea8dc">
+        <span class="num">3</span>
+        <b>Losspielen</b>
+        <p>Account anlegen, Server wecken, beitreten, fertig.</p>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:22px"><a class="btn primary big" href="/apply">Jetzt bewerben</a></div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}<script src="/static/landing.js"></script>{% endblock %}
