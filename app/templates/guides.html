@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% import "_scenes.html" as sc %}
+{% block title %}Beitritts-Anleitungen · {{ brand }}{% endblock %}
+{% block nav_guides %}here{% endblock %}
+{% block body %}
+<div class="wrap">
+  <section class="section" style="padding-top:30px">
+    {# Aufgabenteilung mit der Server-Seite: hier steht die Ersteinrichtung (Client,
+       Mods, Store-Link), die man einmal macht. Die Beitritts-Schritte allein stehen
+       zusaetzlich auf jeder Server-Karte zum Aufklappen, weil man die jedes Mal
+       braucht. Beides kommt aus derselben Quelle (guides.py), also kann es nicht
+       auseinanderlaufen. #}
+    <div class="section-title"><h2>Client einrichten</h2>
+      <span class="hint">einmal pro Spiel{% if principal %} · zum Beitreten reicht die Karte unter <a href="/app">Server</a>{% endif %}</span>
+    </div>
+
+    <nav class="chips jump" aria-label="Zu einem Spiel springen">
+      {% for g in guides %}
+      <a class="chip" href="#guide-{{ g.key }}" style="--gac: {{ g.color }}">{{ g.label }}</a>
+      {% endfor %}
+    </nav>
+
+    <div class="grid guidegrid">
+      {% for g in guides %}
+      <div class="guide" id="guide-{{ g.key }}" style="--gac: {{ g.color }}">
+        <h3>{{ sc.mark(g.key) }} {{ g.label }}</h3>
+        <div class="plat">{{ g.platform }} · Welt „{{ g.world }}“</div>
+
+        <h4>Client</h4>
+        <ol>{% for step in g.install %}<li>{{ step|md }}</li>{% endfor %}</ol>
+        {% if g.store %}<a class="btn ghost tiny" href="{{ g.store }}" target="_blank" rel="noopener">{{ g.client }} ↗</a>{% endif %}
+
+        {# ★ Die Mods kommen gesammelt vom Wirt (app/mods.py), nicht aus einer hier
+           gepflegten Aufzaehlung. `bekannt: false` heisst „nichts gemessen" und wird
+           weggelassen: „Vanilla" zu behaupten, weil der Sammler die Konfiguration
+           nicht fand, schickt jemanden ohne die noetigen Mods vor den Server. #}
+        {% if g.mods.bekannt and not g.mods.mods %}
+        {# Gemessene Null. Das ist eine Aussage, keine Leerstelle: „du brauchst
+           nichts zu installieren" ist beim Einrichten genau die Information, die
+           man sucht. Die Karte sagt es laengst, die Anleitung schwieg. #}
+        <h4>Mods</h4>
+        <p class="hintline" style="margin-top:0">Keine. Der Server läuft unverändert,
+          du brauchst nichts zu installieren.</p>
+        {% endif %}
+        {% if g.mods.bekannt and g.mods.mods %}
+        <h4>{% if g.mods.serverseitig %}Serverseitig ({{ g.mods.mods|length }}){% else %}Mods ({{ g.mods.mods|length }}){% endif %}</h4>
+        <div class="modliste">{% for m in g.mods.mods %}<span class="modchip">{{ m }}</span>{% endfor %}</div>
+        {# ★ Wofuer die Liste gilt, gehoert dazu. Mods sind eine Eigenschaft der WELT,
+           aber nur Zomboid haelt sie auch so (eine Ini je Welt). tModLoader und
+           Factorio laden eine Menge fuer den ganzen Server: dort haetten zwei Welten
+           dieselben Mods, und wer das nicht dazuschreibt, laesst den Leser das
+           Gegenteil vermuten. #}
+        <p class="hintline">
+          {%- if g.mods.serverseitig -%}
+            Läuft auf dem Server. Du brauchst nichts zu installieren.
+          {%- elif g.mods.je_welt -%}
+            Gehört zur Welt „{{ g.world }}“. Stand: {{ mods_stand[:10] if mods_stand else "unbekannt" }}, direkt vom Server gelesen.
+          {%- else -%}
+            Gilt für alle Welten dieses Spiels. Stand: {{ mods_stand[:10] if mods_stand else "unbekannt" }}, direkt vom Server gelesen.
+          {%- endif -%}
+        </p>
+        {% endif %}
+
+        <h4>Beitreten</h4>
+        <ol>{% for step in g.join %}<li>{{ step|md }}</li>{% endfor %}</ol>
+        {% if g.address %}
+        <div class="addr">📍 <span class="addr-text">{{ g.address }}</span><button class="copy tiny" type="button" data-copy="{{ g.address }}" title="Adresse kopieren">Kopieren</button></div>
+        {% else %}
+        <div class="addr masked">🔒 <span class="addr-text">Server-Adresse siehst du als Mitglied nach dem <a href="/login">Login</a></span></div>
+        {% endif %}
+
+        {% if g.notes %}
+        <details class="notes">
+          <summary>Gut zu wissen</summary>
+          <ul>{% for n in g.notes %}<li>{{ n|md }}</li>{% endfor %}</ul>
+        </details>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% if not principal %}
+    <p class="hintline" style="margin-top:20px">Server-Passwörter & Live-Steuerung siehst du nach dem Beitritt. <a href="/apply">Jetzt bewerben →</a></p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}{% endblock %}
