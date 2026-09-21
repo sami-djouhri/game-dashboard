@@ -1,0 +1,106 @@
+{
+ "stand": "2026-09-06T07:50:43+00:00",
+ "spiele": {
+  "terraria": {
+   "gelesen": true,
+   "quelle": "/home/terraria/Mods/enabled.json",
+   "mods": [
+    "BossChecklist",
+    "Fargowiltas",
+    "FargowiltasSouls",
+    "Luminance",
+    "MagicStorage",
+    "RecipeBrowser",
+    "SerousCommonLib",
+    "ThoriumMod"
+   ]
+  },
+  "factorio": {
+   "gelesen": true,
+   "quelle": "/home/factorio/factorio/mods/mod-list.json",
+   "mods": [
+    "Milestones",
+    "VehicleSnap",
+    "aai-containers",
+    "aai-industry",
+    "aai-signal-transmission",
+    "alien-biomes",
+    "alien-biomes-graphics",
+    "combat-mechanics-overhaul",
+    "flib",
+    "informatron",
+    "jetpack",
+    "robot_attrition",
+    "shield-projector",
+    "space-exploration",
+    "space-exploration-graphics",
+    "space-exploration-graphics-2",
+    "space-exploration-graphics-3",
+    "space-exploration-graphics-4",
+    "space-exploration-graphics-5",
+    "space-exploration-menu-simulations",
+    "space-exploration-postprocess"
+   ]
+  },
+  "zomboid": {
+   "gelesen": true,
+   "quelle": "/home/zomboid/Zomboid/Server",
+   "mods": [
+    "Greenleaf B42 version",
+    "MoodleFramework",
+    "SpawnSelector",
+    "TchernoLib",
+    "ThisIsYourLife",
+    "VilaZMap",
+    "twbInfirmities"
+   ],
+   "je_welt": true,
+   "welten": {
+    "greenleaf": [
+     "MoodleFramework",
+     "TchernoLib",
+     "twbInfirmities",
+     "SpawnSelector",
+     "ThisIsYourLife",
+     "Greenleaf B42 version",
+     "VilaZMap"
+    ],
+    "hardcore": [
+     "MoodleFramework",
+     "TchernoLib",
+     "twbInfirmities"
+    ]
+   }
+  },
+  "dayz": {
+   "gelesen": true,
+   "quelle": "/etc/systemd/system/dayz-server.service",
+   "mods": [
+    "CF",
+    "AgricultureCore",
+    "FarmingPlus",
+    "MedicalPLUS",
+    "VPPAdminTools"
+   ]
+  },
+  "minecraft": {
+   "gelesen": true,
+   "quelle": "/opt/mc/data/plugins",
+   "mods": [
+    "Chunky-Bukkit",
+    "multiverse-core"
+   ],
+   "serverseitig": true
+  },
+  "valheim": {
+   "gelesen": true,
+   "quelle": "/home/valheim",
+   "mods": []
+  },
+  "avorion": {
+   "gelesen": true,
+   "quelle": "/home/avorion/.avorion/galaxies",
+   "mods": []
+  }
+ }
+}

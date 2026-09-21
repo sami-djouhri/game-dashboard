@@ -1,0 +1,900 @@
+/* Greenleaf, Leitstelle.
+
+   Das Vorbild ist keine Spiele-Webseite, sondern der Platz, von dem aus sieben
+   Welten hochgefahren werden. Was hier steht, ist der Zustand von Maschinen:
+   was laeuft, wer drin ist, wie viel Speicher noch frei ist, was gerade bootet.
+   Das Gehaeuse ist deshalb Geraet, und die Zeichnung jeder Welt ist das Fenster
+   hinaus. Der Reiz liegt im Gegensatz zwischen beidem, nicht in Effekten.
+
+   Vier Regeln halten das zusammen:
+
+   1. Keine Rundungen, keine Schlagschatten. Was sich abhebt, hebt sich durch
+      eine Linie oder einen Helligkeitssprung ab. Ein Kasten mit weichen Ecken
+      und Schatten ist eine Karte auf einer Webseite; ein Kasten mit Kante ist
+      ein Feld auf einer Frontplatte.
+
+   2. Farbe bedeutet etwas, sonst ist sie nicht da.
+        Phosphorgruen  bereit, an, System.
+        Bernstein      Vorgang laeuft, Achtung, noch nicht joinbar.
+        Rot            Gefahr und Fehlzustand, nichts sonst.
+        Spielfarbe     sagt WELCHE Welt gemeint ist, nie WIE es ihr geht.
+      Deshalb sitzt die Spielfarbe an Kanten, Marken und in der Zeichnung, und
+      niemals in einem Zustands-Abzeichen.
+
+   3. Alles Maschinelle steht in Monospace mit fester Zifferbreite. Die Seite
+      aktualisiert sich alle fuenf Sekunden; eine Spielerzahl, die dabei die
+      Breite wechselt, laesst das ganze Geraet zucken.
+
+   4. Lesbarkeit vor Textur. Raster, Vignette und Scanlinie liegen HINTER dem
+      Inhalt (z-index: -1), nicht darueber. Wer die Textur staerker will, hebt
+      die Linienhelligkeit an, nicht die Deckkraft ueber dem Text.
+*/
+
+:root {
+  color-scheme: dark;
+
+  /* Gehaeuse. Die Namen sind aelter als dieses Theme und bleiben, weil
+     Templates und app.js sie inline verwenden (style="color:var(--text)"). */
+  --bg: #070a09;
+  --bg-2: #0a0f0d;
+  --panel: #0b100e;
+  --panel-solid: #0b100e;
+  --panel-hi: #111815;
+  --edge: #1c2622;
+  --edge-hi: #2c3b35;
+  --edge-soft: rgba(100, 209, 120, .18);
+
+  --text: #d3e0d8;
+  --dim: #8ba095;
+  /* ★ Gemessen auf 5,3:1 gegen den Kartengrund gesetzt, nicht nach Augenmass. Der
+     frueher hier stehende Wert #64776f kam auf 4,17:1 und lag damit unter den
+     4,5:1 fuer Text. Gefunden hat das der Kontrast-Pass des Prueflaufs, an genau
+     zwei Stellen: dem Zusatz im Markennamen und der Versionszeile im Fuss. Eine
+     Farbe, die als Text nicht taugt, gehoert nicht in die Palette, sonst landet
+     sie beim naechsten Mal wieder in einer Textregel. */
+  --dim-2: #71847c;
+
+  /* Der System-Akzent. Greenleafs Gruen, hier als Phosphor gelesen. */
+  --leaf: #64d178;
+  --leaf-2: #3f8f4a;
+  --leaf-glow: rgba(100, 209, 120, .35);
+
+  --amber: #ffb454;
+  --red: #ff6a55;
+  --blue: #6ab4f0;
+
+  --shadow: none;        /* bewusst leer: Tiefe kommt aus Linien, nicht aus Weichzeichnung */
+  --mono: ui-monospace, "JetBrains Mono", "IBM Plex Mono", SFMono-Regular, Menlo,
+          Consolas, "Liberation Mono", monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sperr: .18em;        /* Sperrung der Frontplatten-Beschriftungen */
+  --wrap: 1120px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+/* `clip` statt `hidden`: unterbindet waagerechtes Scrollen, ohne einen
+   Scroll-Container zu erzeugen, der `position: sticky` in der Kopfleiste und
+   den Sprung-Chips brechen wuerde. Alte Engines ignorieren die Zeile. */
+html { overflow-x: clip; }
+
+body {
+  background-color: var(--bg);
+  /* Punktraster: der Grund ist eine Flaeche mit Massstab, kein Farbverlauf. */
+  background-image: radial-gradient(circle at center, rgba(160, 200, 175, .035) 1px, transparent 1px);
+  background-size: 26px 26px;
+  background-attachment: fixed;
+  color: var(--text);
+  font: 15px/1.6 var(--sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Licht der Maschine: ein Phosphor-Schimmer oben, eine warme Gegenlichtecke
+   unten rechts. Ohne die warme Ecke kippt die Seite ins Monochrom-Gruene, und
+   das ist genau der Matrix-Kitsch, der hier nicht gemeint ist. Liegt HINTER
+   allem (z-index: -1) und faengt keine Klicks. */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 70rem 44rem at 50% -18rem, rgba(100, 209, 120, .055), transparent 62%),
+    radial-gradient(ellipse 80rem 52rem at 92% 114%, rgba(255, 180, 84, .035), transparent 70%);
+  background-repeat: no-repeat;
+}
+/* Scanlinien. Deckkraft bewusst niedrig: diese Schicht liegt zwar hinter dem
+   Text, hellt aber den Grund auf und frisst damit Kontrast. Sie soll spuerbar
+   sein, nicht sichtbar. */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom, rgba(0, 0, 0, .22) 0 1px, transparent 1px 3px);
+  opacity: .5;
+}
+
+a { color: var(--leaf); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 22px; }
+:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; }
+
+/* ── Kopfleiste ─────────────────────────────────────────── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 12px 22px; border-bottom: 1px solid var(--edge);
+  background: rgba(7, 10, 9, .92); backdrop-filter: blur(6px);
+  position: sticky; top: 0; z-index: 20;
+}
+.brand {
+  display: flex; align-items: center; gap: 9px;
+  font: 700 16px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+}
+.brand .leaf { width: 17px; height: 17px; flex: none; filter: drop-shadow(0 0 6px var(--leaf-glow)); }
+.brand .sub { color: var(--dim-2); font-weight: 400; font-size: 12px; letter-spacing: .06em; text-transform: none; }
+.nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.nav a {
+  color: var(--dim); font: 600 12px var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  padding: 7px 10px; border: 1px solid transparent;
+}
+.nav a:hover { color: var(--text); border-color: var(--edge); text-decoration: none; }
+/* Die aktive Seite traegt eine Kante, keine Fuellung: dieselbe Sprache wie die
+   Knoepfe, und sie bleibt auch bei Streulicht erkennbar. */
+.nav a.here { color: var(--leaf); border-color: var(--leaf-2); }
+
+.role-badge {
+  font: 700 10.5px var(--mono); letter-spacing: .14em; text-transform: uppercase;
+  padding: 4px 9px; border: 1px solid var(--edge); color: var(--dim);
+}
+.role-badge.owner  { color: var(--amber); border-color: rgba(255,180,84,.45); }
+.role-badge.admin  { color: var(--amber); border-color: rgba(255,180,84,.3); }
+.role-badge.member { color: var(--leaf); border-color: var(--leaf-2); }
+.badge-dot { display: inline-block; width: 6px; height: 6px; margin-right: 5px; vertical-align: middle; background: currentColor; }
+.notif {
+  background: var(--amber); color: #140d02; padding: 1px 6px; margin-left: 6px;
+  font: 700 10.5px var(--mono);
+}
+
+/* ── Knoepfe ────────────────────────────────────────────── */
+/* Ein Knopf ist eine beschriftete Taste: Kante, Monospace, gesperrt, in
+   Versalien. Beim Ueberfahren wechseln Rand und Schrift die Farbe, nicht die
+   Flaeche; eine aufleuchtende Flaeche wirkt wie ein Zustandswechsel, und
+   Zustaende sagt hier das Abzeichen. */
+.btn, button {
+  font: 700 11.5px var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  cursor: pointer; border-radius: 0; padding: 9px 14px;
+  border: 1px solid var(--edge-hi); background: var(--panel-hi); color: var(--text);
+  transition: border-color .14s, color .14s, background .14s;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.btn:hover, button:hover { border-color: var(--leaf); color: var(--leaf); text-decoration: none; }
+.btn:active, button:active { background: #050807; }
+button:disabled, .btn:disabled { opacity: .38; cursor: not-allowed; }
+button:disabled:hover { border-color: var(--edge-hi); color: var(--text); }
+
+/* Die Haupthandlung. Kein Farbblock, sondern eine Taste, die von innen leuchtet. */
+.btn.primary, button.primary {
+  border-color: var(--leaf-2); background: rgba(100, 209, 120, .1); color: var(--leaf);
+}
+.btn.primary:hover, button.primary:hover { border-color: var(--leaf); background: rgba(100, 209, 120, .16); }
+.btn.ghost, button.ghost { background: transparent; border-color: var(--edge); color: var(--dim); font-weight: 400; }
+.btn.ghost:hover, button.ghost:hover { color: var(--leaf); border-color: var(--leaf-2); background: transparent; }
+.btn.big { padding: 13px 22px; font-size: 12.5px; letter-spacing: .14em; }
+button.danger { color: var(--red); border-color: rgba(255,106,85,.4); background: transparent; }
+button.danger:hover { color: var(--red); border-color: var(--red); }
+button.warn { color: var(--amber); border-color: rgba(255,180,84,.4); background: transparent; }
+button.warn:hover { color: var(--amber); border-color: var(--amber); }
+button.tiny { padding: 5px 9px; font-size: 10.5px; }
+
+/* ── Live-Puls ──────────────────────────────────────────── */
+.pulse { display: inline-flex; align-items: center; gap: 8px; font: 600 13px var(--mono); color: var(--dim); }
+/* Eckig, nicht rund: das ist eine Kontrollleuchte, kein Aufkleber. */
+.dot { width: 8px; height: 8px; background: var(--dim-2); }
+.dot.live { background: var(--leaf); animation: ping 2s ease-in-out infinite; }
+@keyframes ping { 0%, 100% { box-shadow: 0 0 0 0 var(--leaf-glow); } 55% { box-shadow: 0 0 10px 2px rgba(100,209,120,.28); } }
+
+/* ── Hero ──────────────────────────────────────────────── */
+.hero { padding: 64px 0 56px; text-align: center; position: relative; overflow: hidden; }
+.hero .wrap { position: relative; z-index: 1; }
+/* Der Horizont blendet nach unten aus, statt als gefuellter Block an der
+   Abschnittskante zu enden. Ohne die Maske sieht der Uebergang aus wie ein
+   abgeschnittenes Bild, und in einer Umgebung aus Linien und Raster faellt genau
+   das als Fehler auf. */
+.hero-forest {
+  position: absolute; inset: auto 0 0 0; width: 100%; height: 120px;
+  display: block; pointer-events: none; z-index: 0; opacity: .8;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 96%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 96%);
+}
+.hero .kicker {
+  font: 700 11px var(--mono); letter-spacing: .3em; color: var(--leaf-2); text-transform: uppercase;
+}
+/* Der Markenname in Maschinenschrift, gesperrt. Kein Verlauf im Text: ein
+   Farbverlauf durch eine Schrift ist die Handschrift jeder beliebigen
+   Startseite, und er nimmt dem Namen genau die Haerte, um die es hier geht. */
+/* ★ Die untere Grenze des clamp muss zum laengsten Markennamen passen, der
+   hineinsoll. „Greenleaf" sind neun Zeichen, und Monospace bricht ein Wort nicht
+   um: bei 38 px Mindestgroesse belegte die Zeile samt Zierstrichen 401 px und
+   sprengte jeden Schirm unter 400 px. 26 px als Boden misst bei 320 px Fenster
+   211 px und passt. Wer den Namen aendert, rechnet hier nach:
+   Breite = Zeichen * 0,6em + Zeichen * letter-spacing + 2,4em fuer die Striche. */
+.hero h1 {
+  font: 700 clamp(26px, 8vw, 76px)/1.05 var(--mono);
+  letter-spacing: .04em;
+  margin: 16px 0 10px; color: var(--text);
+  text-shadow: 0 0 26px rgba(100, 209, 120, .18);
+}
+.hero h1::before, .hero h1::after {
+  content: ""; display: inline-block; width: .5em; height: 1px;
+  vertical-align: .34em; margin: 0 .34em; background: var(--leaf-2);
+}
+.hero .lead { color: var(--dim); font-size: clamp(14.5px, 2.2vw, 17px); max-width: 560px; margin: 0 auto 24px; }
+.hero .cta { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+/* Die Konsole im Kopf: eine Messwerttafel, kein Aufkleber. Sie beantwortet die
+   Frage, mit der jemand ankommt (laeuft was, ist wer da), in der Form, in der ein
+   Geraet antwortet: Bezeichnung links, Wert rechts, Punkte dazwischen. Feste
+   Zifferbreite, damit die Zahlen beim Aktualisieren nicht die Breite wechseln.
+
+   ★ Die Breite steht fest und die Zeilen sind schon im Quelltext da. Eine Tafel,
+   die sich beim Fuellen aufbaut, verschiebt sonst den Knopf darunter genau in dem
+   Moment, in dem jemand darauf zielt. */
+.konsole {
+  display: inline-block; width: min(420px, 100%); margin: 0 auto 20px; text-align: left;
+  padding: 11px 14px; border: 1px solid var(--edge);
+  background: rgba(6, 9, 8, .72);
+  font: 12.5px/1.9 var(--mono); font-variant-numeric: tabular-nums;
+  transition: border-color .3s;
+}
+.konsole.on { border-color: var(--leaf-2); }
+.konsole .kz { display: flex; align-items: baseline; gap: 8px; color: var(--dim); }
+.konsole .kl { flex: none; }
+/* Die Punktfuehrung verbindet Bezeichnung und Wert. Sie ist der Grund, warum die
+   Tafel wie ein Bericht liest und nicht wie drei zufaellige Zeilen. */
+.konsole .kp { flex: 1; min-width: 12px; border-bottom: 1px dotted var(--edge-hi); transform: translateY(-3px); }
+.konsole .kz b { flex: none; color: var(--leaf); font-weight: 700; }
+.konsole .kz-status {
+  margin-top: 7px; padding-top: 8px; border-top: 1px solid var(--edge);
+  color: var(--text); flex-wrap: wrap;
+}
+.konsole .kz-status b { color: var(--leaf); }
+/* Der Cursor blinkt, solange der Status wirklich gelesen wird (landing.js setzt
+   `aus`, wenn die Abfrage scheitert). Deshalb ist er eine Betriebsanzeige und
+   keine Zierde: eine stehende Seite sieht sonst aus wie eine aktuelle. */
+.konsole .cursor {
+  display: inline-block; width: 8px; height: 14px; margin-left: 6px;
+  vertical-align: -2px; background: var(--leaf); animation: blink 1.1s steps(1) infinite;
+}
+.konsole .cursor.aus { background: var(--dim-2); animation: none; }
+@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+.konsole .dot { flex: none; align-self: center; }
+
+/* ── Abschnitte ────────────────────────────────────────── */
+.section { padding: 38px 0; }
+/* Frontplatten-Beschriftung: klein, gesperrt, mit einer Linie, die bis zum
+   Rand durchlaeuft. Sie ordnet die Seite in Felder, ohne eine Ueberschrift zu
+   brauchen, die um Aufmerksamkeit konkurriert. */
+.section-title { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; flex-wrap: wrap; row-gap: 5px; }
+.section-title h2 {
+  font: 700 12px var(--mono); letter-spacing: var(--sperr); text-transform: uppercase;
+  margin: 0; color: var(--text); flex: none;
+}
+/* ★ `flex: 0 1 auto` mit `min-width: 0`, NICHT `flex: none`. Gemessen am 2026-09-06:
+   mit `none` weigert sich der Hinweis zu schrumpfen, und „eigener Server, kein
+   Gameserver-Hoster" schob die Landing auf 401 px Breite bei einem 320-px-Schirm.
+   Unter 620 px rutscht er ganz in eine eigene Zeile (order), damit die Linie neben
+   der Ueberschrift stehen bleibt statt zwischen zwei Textstuecken zu kleben. */
+.section-title .hint { color: var(--dim); font: 12px var(--mono); flex: 0 1 auto; min-width: 0; }
+.section-title::after { content: ""; flex: 1 0 30px; height: 1px; background: var(--edge); order: 3; }
+@media (max-width: 620px) {
+  .section-title .hint { flex-basis: 100%; order: 4; }
+}
+.divider { height: 1px; background: var(--edge); margin: 8px 0; }
+
+/* Tech-Chips */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font: 600 11.5px var(--mono); letter-spacing: .06em; color: var(--dim);
+  padding: 7px 11px; border: 1px solid var(--edge); background: rgba(0,0,0,.25);
+}
+.chip b { color: var(--leaf); }
+@media (min-width: 620px) {
+  .chips.tech { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+}
+
+/* Sprung-Chips (Guides): klebt unter der Kopfleiste, Kennfarbe je Spiel */
+.chips.jump { position: sticky; top: 54px; z-index: 10; padding: 8px 0 12px; margin-bottom: 6px;
+  background: linear-gradient(180deg, var(--bg) 72%, transparent); flex-wrap: nowrap;
+  overflow-x: auto; scrollbar-width: none; }
+.chips.jump::-webkit-scrollbar { display: none; }
+.chips.jump .chip { white-space: nowrap; color: var(--text); text-decoration: none;
+  text-transform: uppercase; letter-spacing: .1em;
+  border-color: color-mix(in srgb, var(--gac, #64d178) 32%, var(--edge)); }
+.chips.jump .chip:hover { border-color: var(--gac); color: var(--gac); }
+
+/* Beitritts-Schritte (Landing) */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.step { background: var(--panel); border: 1px solid var(--edge); padding: 16px 18px; position: relative; }
+.step .num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; margin-bottom: 10px;
+  font: 700 12px var(--mono); color: var(--gac);
+  border: 1px solid color-mix(in srgb, var(--gac) 40%, transparent);
+}
+.step b { display: block; font-size: 15px; margin-bottom: 4px; }
+.step p { margin: 0; color: var(--dim); font-size: 13.5px; }
+
+/* ── Gitter + Karten ───────────────────────────────────── */
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr)); }
+.loading { color: var(--dim); font: 13px var(--mono); padding: 30px 4px; }
+/* Die Anzeige steht still (Server nicht erreichbar). Sichtbar abgesetzt, weil ein
+   eingefrorener Stand sonst genauso aussieht wie ein Live-Bild: die Faerbung ist der
+   Unterschied, den man ohne Lesen bemerkt. Der Grund steht im Banner darueber. */
+.grid.stale { opacity: .45; filter: saturate(.15); transition: opacity .35s ease, filter .35s ease; }
+/* Ist irgendwo ein Panel aufgeklappt, behaelt jede Karte ihre eigene Hoehe. Sonst
+   zieht die eine entfaltete Kachel ihre Nachbarn mit und reisst in ihnen ein Loch
+   auf; gemessen 430 px an der Valheim-Kachel, weil Terraria daneben Welten und
+   Sicherungen offen hatte. app.js setzt die Klasse (panelZustand). */
+.grid.entfaltet { align-items: start; }
+
+.card {
+  --gac: var(--leaf);   /* Kennfarbe der Welt, pro Karte via style="--gac: …" gesetzt */
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  padding: 15px; position: relative;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: border-color .18s;
+}
+/* Eckwinkel in der Kennfarbe: die Karte ist ein erfasstes Objekt, kein Blatt
+   Papier. Zwei diagonale Ecken statt vier, das reicht dem Auge und bleibt
+   ruhig genug fuer sieben Kacheln nebeneinander. */
+.card::before, .card::after {
+  content: ""; position: absolute; width: 9px; height: 9px; pointer-events: none;
+  border-color: var(--gac); opacity: .5; transition: opacity .18s;
+}
+.card::before { top: -1px; left: -1px; border-top: 1px solid; border-left: 1px solid; }
+.card::after { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid; }
+.card:hover { border-color: color-mix(in srgb, var(--gac) 45%, var(--edge)); }
+.card:hover::before, .card:hover::after { opacity: 1; }
+.card.active { border-color: color-mix(in srgb, var(--gac) 60%, var(--edge)); }
+.card.active::before, .card.active::after { opacity: 1; }
+
+.card-head { display: flex; align-items: center; gap: 12px; }
+/* Der Spielname in Maschinenschrift, aber in normaler Schreibweise: „Project
+   Zomboid" ist ein Eigenname, kein Systemobjekt. Versalien haetten aus jedem
+   Spiel eine Prozessbezeichnung gemacht. */
+.card-title { font: 700 15.5px var(--mono); letter-spacing: -.01em; }
+/* Die Maschinenzeile unter dem Namen: Plaetze und Speicherbedarf, in fester
+   Zifferbreite. Sie sagt, was dieser Server IST, waehrend das Abzeichen sagt,
+   was er GERADE TUT. */
+.card-slots {
+  color: var(--dim); font: 11.5px var(--mono); letter-spacing: .04em;
+  font-variant-numeric: tabular-nums;
+}
+/* ★ Die einzelnen Angaben bleiben zusammen, der Umbruch passiert zwischen ihnen.
+   Der Trenner steht deshalb als Text ZWISCHEN den Stuecken und nicht als ::before
+   in ihnen: dort gehoerte er zum nowrap-Bereich, die ganze Zeile wurde unteilbar,
+   und die Kachel forderte 414 px Mindestbreite. Gemessen auf einem 320-px-Schirm:
+   23 Bedienelemente lagen ausserhalb. */
+.card-slots .spec { white-space: nowrap; }
+
+/* Zustands-Abzeichen. Eckig, Monospace, gesperrt. ★ Die Kennfarbe der Welt
+   kommt hier NICHT vor: „gruen" heisst bereit, und ein Abzeichen in Avorion-
+   Lila haette weder das eine noch das andere gesagt. */
+.badge {
+  margin-left: auto; white-space: nowrap;
+  font: 700 10.5px var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  padding: 4px 9px; border: 1px solid currentColor;
+}
+.badge::before {
+  content: ""; display: inline-block; width: 6px; height: 6px;
+  margin-right: 6px; vertical-align: .5px; background: currentColor;
+}
+.badge.active    { color: var(--leaf); background: rgba(100,209,120,.08); }
+.badge.active::before { box-shadow: 0 0 7px currentColor; }
+/* Dauerlaeufer (nicht weckbar): wie "laeuft", nur ohne Steuerung. */
+.badge.always_on { color: var(--leaf); background: rgba(100,209,120,.08); }
+.badge.sleeping  { color: var(--dim); }
+.badge.blocked   { color: var(--amber); background: rgba(255,180,84,.07); }
+.badge.offline   { color: var(--red); background: rgba(255,106,85,.08); }
+/* Rolle, ueber die der Arbiter gerade nichts sagt (Bridge nicht erreichbar): gedaempft
+   statt gruen oder rot, die Farbe soll nichts behaupten, was niemand gemessen hat. */
+.badge.unbekannt { color: var(--dim); }
+/* Gestartet, aber noch nicht joinbar. Bernstein statt gruen: gruen hiesse "komm rein",
+   und genau der Beitritt scheitert in diesen 1-3 Minuten noch. Der Punkt blinkt,
+   damit die Kachel nach Vorgang aussieht und nicht nach Endzustand. */
+.badge.starting  { color: var(--amber); background: rgba(255,180,84,.07); }
+.badge.starting::before { animation: bootblink 1.2s ease-in-out infinite; }
+@keyframes bootblink { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+/* Startbefehl liegt lange zurueck, der Server antwortet immer noch nicht. */
+.badge.stumm     { color: var(--red); background: rgba(255,106,85,.08); }
+
+.card-meta { font-size: 13px; color: var(--dim); display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+/* Bei einem schlafenden Server steht in dieser Zeile nichts: es gibt weder eine
+   Spielerzahl noch eine laufende Welt zu nennen. Die frueher feste Mindesthoehe hielt
+   dort eine leere Zeile offen, damit die Kacheln beim Zustandswechsel nicht springen.
+   Das uebernimmt jetzt die Fussgruppe, die ohnehin am Kartenboden klebt. */
+.card-meta:empty { display: none; }
+.card-meta .players { color: var(--leaf); font: 700 13px var(--mono); font-variant-numeric: tabular-nums; }
+.card-meta .players.big { font-size: 26px; line-height: 1; letter-spacing: -.02em; }
+.card-meta .plabel { color: var(--dim); font: 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+/* Ein Weltname ist ein Systemwert, kein Fliesstext: „Greenleaf (Large/Expert)" ist
+   genau die Zeichenfolge, die auf dem Wirt steht. */
+.card-meta .weltname { color: var(--text); font: 700 12.5px var(--mono); }
+
+/* Laufender Vorgang: die Kante wandert im Takt, statt die Karte pulsieren zu
+   lassen. Ein Kasten, der seine Groesse aendert, schiebt seine Nachbarn. */
+.card.busy { border-color: color-mix(in srgb, var(--gac) 60%, var(--edge)); }
+.card.busy::before, .card.busy::after { animation: busyblink 1.2s ease-in-out infinite; opacity: 1; }
+@keyframes busyblink { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+
+/* Platzhalter beim ersten Laden */
+.card.skel { min-height: 190px; border-style: dashed; animation: shimmer 1.6s ease-in-out infinite; }
+.card.skel::before, .card.skel::after { display: none; }
+@keyframes shimmer { 0%, 100% { opacity: .35; } 50% { opacity: .7; } }
+
+/* Alles, was zum Beitreten und Bedienen gehoert, sitzt am Kartenboden. `margin-top:auto`
+   schiebt die Gruppe nach unten, damit der Hoehenausgleich einer Gitterreihe in der
+   Mitte landet statt unter den Knoepfen: sonst stehen die Leisten benachbarter Karten
+   auf verschiedenen Hoehen, je nachdem, ob eine Kachel gerade einen Speicher-Hinweis
+   oder eine Startmeldung traegt. */
+.card-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+
+/* Die Beitritts-Adresse als Terminalzeile. ★ Der frueher rundum gleiche Rahmen auf
+   dunklem Grund war von einem Eingabefeld nicht zu unterscheiden, also klickte man
+   hinein und tippte ins Nichts. Der Kennfarben-Streifen links und das vorangestellte
+   Prompt-Zeichen machen daraus sichtbar eine Ausgabe. Der Kopier-Knopf ist derselbe
+   wie in den Guides: dort war die Adresse laengst mit einem Klick zu holen, auf der
+   Karte musste man sie mit der Maus markieren. */
+.card-join {
+  display: flex; align-items: center; gap: 9px;
+  font: 12px var(--mono); color: var(--dim); word-break: break-word;
+  background: rgba(0,0,0,.3); border: 1px solid var(--edge);
+  border-left: 2px solid color-mix(in srgb, var(--gac) 60%, var(--edge));
+  padding: 8px 8px 8px 10px;
+}
+.card-join .join-text { flex: 1; min-width: 0; }
+.card-join .join-text::before { content: "› "; color: var(--gac); }
+.card-join .copy { flex: none; padding: 4px 8px; font-size: 10px; color: var(--dim); background: transparent; border-color: var(--edge); }
+.card-join .copy.ok { color: var(--leaf); border-color: var(--leaf-2); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 7px; }
+/* Fuer ein Mitglied hat eine laufende Karte nichts zu bedienen. Ohne diese Zeile
+   bliebe die leere Leiste als Luecke stehen und sieht aus wie ein Ladefehler. */
+.actions:empty { display: none; }
+/* ★ Die zweite Zeile traegt, was Sonderrecht ist, und sagt das auch. Getrennt wird
+   nach RECHT, nicht nach Tragweite: oben steht, was jedes Mitglied darf, hier, was
+   nur Admins duerfen. Vorher lag beides gemischt in einer Leiste, und einem Mitglied
+   fehlten einfach ein paar Knoepfe, ohne Hinweis darauf, dass es sie gibt. Die Marke
+   links ist der Unterschied zwischen „hier ist nichts" und „hier darfst du nicht". */
+/* ★ Die Marke steht als Beschriftung UEBER dem Block, nicht als Chip in der ersten
+   Zeile. Gemessen an der Valheim-Karte: die Knoepfe brechen um, und ein Chip links
+   in Zeile eins galt dann sichtbar nur fuer Zeile eins, waehrend „Reservierung
+   aufheben" und „Sicherungen" darunter wie eine eigene, unbeschriftete Gruppe
+   dastanden. Als Frontplatten-Beschriftung mit durchlaufender Linie gilt sie fuer
+   alles darunter, und sie spricht dieselbe Sprache wie die Abschnitts-Titel. */
+.rechte-kopf {
+  display: flex; align-items: center; gap: 10px; margin-top: 4px;
+  color: var(--amber); font: 700 9.5px var(--mono); letter-spacing: .16em; text-transform: uppercase;
+}
+.rechte-kopf::after { content: ""; flex: 1; height: 1px; background: rgba(255,180,84,.22); }
+.actions.admin { gap: 6px; }
+/* Die Hierarchie tragen Trennlinie, Marke und Knopfgroesse, NICHT eine dunklere
+   Schrift: var(--dim-2) auf dem Kartengrund misst 3,9:1 und liegt damit unter den
+   4,5:1, die Text braucht. Ein Knopf, den man schlechter liest, ist nicht dezent,
+   sondern schlechter bedienbar. */
+.actions.admin button { color: var(--dim); border-color: var(--edge); background: transparent; }
+.actions.admin button:hover { color: var(--leaf); border-color: var(--leaf-2); }
+.actions.admin button.danger { color: var(--red); border-color: rgba(255,106,85,.4); }
+.actions.admin button.danger:hover { border-color: var(--red); }
+
+/* ── Mods ───────────────────────────────────────────────────────────── */
+/* Die Namen stehen als einzelne Marken, nicht als Komma-Kette: bei 21 Factorio-
+   Mod-Paketen ist ein Fliesstext eine Wand, in der man einen bestimmten Namen
+   nicht findet. Als Marken ist die Liste ueberfliegbar und bricht sauber um. */
+.modblock { margin: 10px 0 4px; }
+.rechte-kopf.mods { color: var(--dim); }
+.rechte-kopf.mods::after { background: var(--edge); }
+.modliste { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+/* Mods einer Welt im Welten-Panel: eigene Zeile ueber die volle Breite. In der
+   Welt-Zeile selbst drangen die Namen in den Bereich der Knoepfe und lasen sich,
+   als liefen sie unter ihnen hindurch. */
+.weltmods { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 10px 0; }
+.weltmods .modchip { font-size: 10.5px; padding: 2px 6px; color: var(--dim); }
+.modchip {
+  font: 11px var(--mono); color: var(--text);
+  border: 1px solid var(--edge); background: rgba(0,0,0,.3); padding: 3px 7px;
+}
+
+/* Beitritts-Anleitung in der Karte: Schritte in derselben Form wie auf der
+   Anleitungs-Seite, damit man beim Wechseln nichts neu lesen muss. */
+.guide-steps { margin: 0; padding-left: 20px; color: var(--text); font-size: 13px; line-height: 1.6; }
+.guide-steps li { margin: 5px 0; }
+.guide-steps code { font: 12px var(--mono); color: var(--gac, var(--leaf)); background: rgba(0,0,0,.4); padding: 1px 5px; }
+.guide-steps strong { color: var(--text); font-weight: 700; }
+
+/* Multi-Welten: Welt-Auswahl auf der Karte + Marke der laufenden Welt */
+select.world-sel { width: auto; flex: 1; min-width: 108px; padding: 8px 9px; font: 600 12px var(--mono); }
+.world-tag {
+  font: 700 10.5px var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--blue); border: 1px solid rgba(106,180,240,.4); padding: 3px 8px;
+}
+
+/* Banner ueber dem Gitter, leer = unsichtbar */
+.banner { padding: 10px 13px; margin-bottom: 12px; font: 12.5px var(--mono); line-height: 1.55;
+  border: 1px solid var(--edge); border-left: 3px solid var(--edge-hi); background: var(--panel); color: var(--dim); }
+.banner.warn { color: var(--amber); border-left-color: var(--amber); }
+.banner:empty { display: none; }
+
+/* ── Felder / Formulare ────────────────────────────────── */
+.panel { background: var(--panel); border: 1px solid var(--edge); padding: 18px; }
+.auth-wrap { max-width: 430px; margin: 8vh auto 40px; }
+.auth-wrap h1 { font: 700 20px var(--mono); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 6px; }
+.auth-wrap .muted { color: var(--dim); margin: 0 0 20px; font-size: 14px; }
+label {
+  display: block; color: var(--dim); margin: 14px 0 6px;
+  font: 700 10.5px var(--mono); letter-spacing: var(--sperr); text-transform: uppercase;
+}
+input, textarea, select {
+  width: 100%; font: 15px var(--mono); color: var(--text);
+  background: #060909; border: 1px solid var(--edge); border-radius: 0; padding: 10px 12px;
+}
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--leaf-2); box-shadow: inset 0 0 0 1px rgba(100,209,120,.2); }
+textarea { resize: vertical; min-height: 90px; font-family: var(--sans); }
+.form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.form-row > div { flex: 1; min-width: 140px; }
+.check { display: flex; align-items: center; gap: 9px; margin-top: 12px; }
+/* ★ Eigener Kasten statt der Betriebssystem-Checkbox. `color-scheme: dark` faerbt
+   sie nicht auf jedem System ein, und ein weisses Quadrat ist auf dieser Seite der
+   hellste Punkt ueberhaupt: das Auge landet auf einem Haekchen statt auf dem Knopf
+   daneben. Der Haken ist ein gedrehtes L aus zwei Kanten, damit kein Zeichensatz
+   noetig ist. */
+.check input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 16px; height: 16px; flex: none; margin: 0; position: relative;
+  background: #060909; border: 1px solid var(--edge-hi); cursor: pointer;
+}
+.check input[type="checkbox"]:hover { border-color: var(--leaf-2); }
+.check input[type="checkbox"]:checked { border-color: var(--leaf); background: rgba(100,209,120,.12); }
+.check input[type="checkbox"]:checked::after {
+  content: ""; position: absolute; left: 4px; top: 0; width: 5px; height: 10px;
+  border: solid var(--leaf); border-width: 0 2px 2px 0; transform: rotate(42deg);
+}
+.check input { width: auto; accent-color: var(--leaf); }
+.check label { margin: 0; color: var(--text); font: 13px var(--sans); letter-spacing: 0; text-transform: none; }
+.hintline { color: var(--dim); font: 12px var(--mono); margin-top: 6px; line-height: 1.55; }
+.formbtns { margin-top: 20px; display: flex; gap: 10px; align-items: center; }
+
+/* ── Meldungen ─────────────────────────────────────────── */
+.flash { padding: 11px 14px; margin: 16px 0; font: 13px var(--mono); line-height: 1.55;
+  border: 1px solid var(--edge); background: var(--panel); border-left: 3px solid var(--leaf); word-break: break-word; }
+.flash.err { border-left-color: var(--red); }
+.flash code { color: var(--leaf); background: rgba(0,0,0,.4); padding: 2px 5px; }
+
+/* ── Tabellen (Admin) ──────────────────────────────────── */
+/* Zeitstempel-Spalte im Verlauf: feste Breite auf dem Desktop, damit die Spalten
+   untereinander stehen. Im Stapel-Modus (Handy) hebt die Media-Query sie auf. */
+.tbl .zeit { width: 150px; white-space: nowrap; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th {
+  text-align: left; color: var(--dim); padding: 9px 10px; border-bottom: 1px solid var(--edge-hi);
+  font: 700 10.5px var(--mono); letter-spacing: var(--sperr); text-transform: uppercase;
+}
+.tbl td { padding: 10px; border-bottom: 1px solid var(--edge); vertical-align: middle; }
+.tbl tr:hover td { background: rgba(100,209,120,.03); }
+.tbl .mono { font: 12px var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+.tag {
+  font: 700 10px var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 7px; border: 1px solid var(--edge); color: var(--dim);
+}
+.tag.pending { color: var(--amber); border-color: rgba(255,180,84,.4); }
+.tag.approved, .tag.on { color: var(--leaf); border-color: var(--leaf-2); }
+.tag.rejected, .tag.off { color: var(--red); border-color: rgba(255,106,85,.4); }
+.inline-form { display: inline; }
+
+/* Lagezeile (Admin): der eine Blick auf die Maschinen auf einer Seite, die von
+   Menschen handelt. Sie ist ein Link, kein Schild, und sieht auch so aus. */
+.lage {
+  display: flex; align-items: center; gap: 26px; flex-wrap: wrap;
+  padding: 14px 18px; border: 1px solid var(--edge); background: var(--panel);
+  color: var(--dim); text-decoration: none;
+  font: 13px var(--mono); font-variant-numeric: tabular-nums;
+  transition: border-color .15s;
+}
+.lage:hover { border-color: var(--leaf-2); text-decoration: none; }
+.lage b { color: var(--leaf); font: 700 19px var(--mono); vertical-align: -1px; }
+.lage .lz-pfeil { margin-left: auto; color: var(--leaf); font-weight: 700; letter-spacing: .06em; }
+@media (max-width: 620px) {
+  .lage { gap: 6px 18px; }
+  .lage .lz-pfeil { margin-left: 0; width: 100%; }
+}
+.stat-row { display: flex; gap: 12px; flex-wrap: wrap; }
+/* Die Kacheln fuehren in den zugehoerigen Abschnitt, sind also Links und muessen
+   sich auch so verhalten: sichtbare Reaktion beim Ueberfahren und ein Fokusrahmen fuer
+   die Tastatur. Ohne das waere ein anklickbares Element von einem Schild nicht zu
+   unterscheiden. */
+.stat { display: block; background: var(--panel); border: 1px solid var(--edge);
+        padding: 12px 16px; min-width: 130px; color: inherit; text-decoration: none;
+        transition: border-color .15s; }
+a.stat:hover { border-color: var(--leaf-2); text-decoration: none; }
+.stat .n { font: 700 26px var(--mono); color: var(--leaf); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat .l { color: var(--dim); font: 10.5px var(--mono); letter-spacing: .1em; text-transform: uppercase; margin-top: 3px; }
+/* Die Sprungziele liegen unter der klebenden Kopfleiste, sonst landet die Ueberschrift
+   dahinter und man sieht nach dem Sprung mitten in eine Tabelle. */
+.section-title[id] { scroll-margin-top: 78px; }
+
+/* ── Guides ────────────────────────────────────────────── */
+.guide { --gac: var(--leaf); background: var(--panel); border: 1px solid var(--edge);
+         padding: 16px 18px; scroll-margin-top: 118px; position: relative;
+         display: flex; flex-direction: column; }
+.guide::before {
+  content: ""; position: absolute; top: -1px; left: -1px; width: 9px; height: 9px;
+  border-top: 1px solid var(--gac); border-left: 1px solid var(--gac); opacity: .6;
+}
+.guide h3 { margin: 0 0 4px; font: 700 16px var(--sans); display: flex; align-items: center; gap: 10px; }
+.guide .plat { color: var(--dim); font: 11.5px var(--mono); letter-spacing: .04em; }
+.guide h4 {
+  margin: 16px 0 8px; color: var(--gac);
+  font: 700 10.5px var(--mono); letter-spacing: var(--sperr); text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+}
+.guide h4::after { content: ""; flex: 1; height: 1px; background: var(--edge); }
+/* ★ Die Anleitung ist eine Spalte (flex), und deren Kinder werden auf volle Breite
+   gestreckt. Der Store-Knopf lief dadurch quer durch die ganze Karte und sah aus
+   wie eine Leiste statt wie ein Knopf. */
+.guide > .btn { align-self: flex-start; }
+.guide ol, .guide ul { margin: 0; padding-left: 20px; color: var(--text); }
+.guide li { margin: 5px 0; }
+.guide code { font: 12px var(--mono); color: var(--gac); background: rgba(0,0,0,.4); padding: 1px 5px; }
+/* `margin-top: auto` schiebt Adresse und Notizen an den Kartenboden, wie bei den
+   Server-Kacheln auch: die Anleitungen sind verschieden lang (Avorion braucht zwei
+   Schritte, Terraria fuenf), und in einer Gitterreihe endete die kuerzeste sonst mit
+   einem Loch unter der Adresse. Gleiche Sache, gleiche Loesung. */
+.guide .addr { display: flex; align-items: center; gap: 8px; font: 12.5px var(--mono); color: var(--gac);
+  background: rgba(0,0,0,.4); border: 1px solid color-mix(in srgb, var(--gac) 28%, var(--edge));
+  padding: 7px 8px 7px 10px; margin-top: auto; }
+/* Fuellt eine Anleitung ihre Reihe selbst aus, bleibt fuer `auto` kein Platz mehr und
+   die Adresse klebte an der Liste darueber. Der Abstand kommt deshalb von unten. */
+.guide > ol:last-of-type { margin-bottom: 8px; }
+.guide .addr .addr-text { flex: 1; word-break: break-all; }
+.guide .addr .copy { flex: none; padding: 4px 8px; font-size: 10px; color: var(--dim); background: transparent; border-color: var(--edge); }
+.guide .addr .copy.ok { color: var(--leaf); border-color: var(--leaf-2); }
+.guide .addr.masked { color: var(--dim); border-color: var(--edge); font-family: var(--sans); }
+.guide details.notes { margin-top: 12px; border: 1px solid var(--edge); background: rgba(0,0,0,.2); }
+.guide details.notes summary { cursor: pointer; padding: 9px 12px; color: var(--dim); list-style: none;
+  font: 700 10.5px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.guide details.notes summary::before { content: "+ "; color: var(--gac); }
+.guide details.notes[open] summary::before { content: "- "; }
+.guide details.notes ul { padding: 0 16px 12px 30px; font-size: 13.5px; }
+
+/* ── Downloads ─────────────────────────────────────────── */
+.dl { --gac: var(--leaf); display: flex; align-items: center; gap: 14px; background: var(--panel); border: 1px solid var(--edge); padding: 12px 15px; }
+.dl .e { font-size: 24px; }
+.dl .meta { flex: 1; }
+.dl .meta b { font-size: 15px; }
+.dl .meta .sub { color: var(--dim); font: 11.5px var(--mono); }
+
+/* ── Fuss ──────────────────────────────────────────────── */
+.foot { border-top: 1px solid var(--edge); margin-top: 44px; padding: 22px 0 36px; color: var(--dim); font: 12px var(--mono); }
+.foot .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+.foot .credit { color: var(--dim); }
+.foot .credit b { color: var(--leaf-2); font-weight: 700; }
+.foot .meta { color: var(--dim-2); letter-spacing: .06em; }
+
+/* ── Toast ─────────────────────────────────────────────── */
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: 90vw;
+  background: var(--panel-hi); border: 1px solid var(--edge-hi); border-left: 3px solid var(--leaf);
+  padding: 12px 16px; z-index: 40; white-space: pre-line; font: 12.5px var(--mono); line-height: 1.55; }
+.toast.err { border-left-color: var(--red); }
+.toast.warn { border-left-color: var(--amber); }
+
+/* ── Hinweise auf der Karte ────────────────────────────── */
+/* Startvorgang: kein Alarmton, aber deutlich genug, dass niemand jetzt beitritt. */
+.boothint { color: var(--amber); font: 12px var(--mono); line-height: 1.5; }
+.boothint.warn { color: var(--red); }
+/* Speicher knapp: erklaert, nicht verbietet, der Start darf trotzdem versucht werden. */
+.lowmem { padding: 8px 10px; font: 12px var(--mono); line-height: 1.5;
+          color: var(--amber); background: rgba(255,180,84,.06); border: 1px solid rgba(255,180,84,.25);
+          border-left-width: 3px; }
+
+/* ── Dialog (Ersatz fuer prompt/confirm) ───────────────── */
+dialog.ask { border: 1px solid var(--edge-hi); background: var(--panel-hi); color: var(--text);
+             border-radius: 0; padding: 0; max-width: 460px; width: calc(100vw - 32px); }
+dialog.ask::backdrop { background: rgba(3, 6, 5, .72); backdrop-filter: blur(2px); }
+dialog.ask form { padding: 18px 20px 16px; margin: 0; }
+dialog.ask h3 { margin: 0 0 8px; font: 700 12px var(--mono); letter-spacing: var(--sperr); text-transform: uppercase; }
+dialog.ask p { margin: 0 0 14px; color: var(--dim); font-size: 13.5px; line-height: 1.55; white-space: pre-line; }
+dialog.ask input { width: 100%; padding: 10px 12px; border: 1px solid var(--edge);
+                   background: #060909; color: var(--text); font: 14px var(--mono); }
+dialog.ask input:focus { outline: none; border-color: var(--leaf-2); }
+dialog.ask.danger input:focus { border-color: var(--red); }
+dialog.ask .ask-err { margin: 8px 0 0; color: var(--red); font: 12px var(--mono); }
+dialog.ask .ask-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+/* ── Spielszenen ───────────────────────────────────────── */
+/* ★ Das Banner haelt das Seitenverhaeltnis der Zeichnung (360x120 viewBox), statt
+   eine feste Hoehe zu haben. Mit `height: 74px` hing der gezeigte Ausschnitt an der
+   Kartenbreite: gemessen bei einer 363 px breiten Karte skaliert `slice` das SVG auf
+   363x121 und zeigt davon die unteren 74 px, also erst ab y=46 von 120. Die obere
+   Haelfte jeder Zeichnung fiel weg, und weil dort die Silhouetten ihre Spitze haben,
+   endeten Terrarias Baumkrone, DayZ' Funkturm und Avorions Planet mitten im Bild.
+   Mit dem Verhaeltnis 360/108 bleibt der Ausschnitt bei JEDER Kartenbreite derselbe. */
+.scene-wrap {
+  aspect-ratio: 360 / 108; margin: -15px -15px 2px; position: relative; overflow: hidden;
+  border-bottom: 1px solid var(--edge);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gac, var(--leaf)) 10%, transparent), rgba(0, 0, 0, .35));
+}
+.scene { position: absolute; inset: auto 0 0 0; width: 100%; height: 100%; display: block; }
+/* Rasterlinien ueber der Zeichnung: das Fenster in die Welt ist eines auf einem
+   Schirm. Sehr schwach, damit die Silhouetten nicht zerfallen. */
+.scene-wrap::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+  opacity: .55;
+}
+/* ★ 3:1 wie die viewBox (360x120), damit die Marke die GANZE Szene zeigt. Mit den
+   frueheren 52x34 (1,5:1) schnitt `slice` das mittlere Drittel heraus: uebrig blieb
+   ein Farbfleck ohne erkennbares Motiv, bei Valheim ein Stueck Berg, bei Avorion
+   schwarzer Himmel. Eine Marke, die man nicht erkennt, ist keine Marke. */
+.scene-mark {
+  width: 72px; height: 24px; flex: none; position: relative; overflow: hidden;
+  display: inline-block; vertical-align: middle;
+  border: 1px solid color-mix(in srgb, var(--gac, var(--leaf)) 30%, var(--edge));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gac, var(--leaf)) 12%, transparent), rgba(0, 0, 0, .35));
+}
+.guide h3 .scene-mark { margin-right: 2px; }
+
+/* ── Ausklapp-Panels in der Karte (Welten, Sicherungen) ── */
+.snap-panel { border-top: 1px solid var(--edge); margin: 4px -15px -15px; padding: 12px 15px 13px; background: rgba(0, 0, 0, .25); }
+.snap-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.snap-head b { font: 700 10.5px var(--mono); letter-spacing: var(--sperr); text-transform: uppercase; color: var(--dim); }
+.snap-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--edge); }
+.snap-row:last-of-type { border-bottom: 0; }
+.snap-row .meta { flex: 1; min-width: 0; font-size: 13px; }
+.snap-row .meta code { font: 11px var(--mono); color: var(--dim-2); word-break: break-all; }
+.snap-row .sub, .snap-panel .sub, .dlrow .sub { color: var(--dim); font: 11.5px var(--mono); line-height: 1.55; }
+.snap-btns { display: flex; gap: 6px; flex: none; }
+/* (Die Welten-Chips im Sicherungen-Panel sind entfallen: Welten haben ein eigenes
+   Panel. Ein Loeschknopf als kleines "x" hinter einem Namen war fuer die folgen-
+   reichste Aktion der Seite die falsche Groesse.) */
+
+/* ── Aktivitaet: Feed + Spielzeit ──────────────────────── */
+.activity-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 14px; }
+.panel-h { margin: 0 0 12px; color: var(--dim);
+  font: 700 10.5px var(--mono); letter-spacing: var(--sperr); text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px; }
+.panel-h::after { content: ""; flex: 1; height: 1px; background: var(--edge); }
+.feed { list-style: none; margin: 0; padding: 0; }
+.feed li { display: flex; align-items: baseline; gap: 9px; padding: 7px 0; border-bottom: 1px solid var(--edge); font-size: 13px; flex-wrap: wrap; }
+.feed li:last-child { border-bottom: 0; }
+.feed-dot { width: 7px; height: 7px; flex: none; align-self: center; background: color-mix(in srgb, var(--gac, var(--leaf)) 75%, transparent); }
+.feed-dot.live { background: var(--gac, var(--leaf)); box-shadow: 0 0 7px color-mix(in srgb, var(--gac, var(--leaf)) 60%, transparent); }
+.feed-when { font: 11.5px var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+.feed-world { font: 700 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--gac, var(--leaf)); }
+.feed-len { color: var(--dim); font: 11.5px var(--mono); margin-left: auto; }
+.ptbars { display: flex; flex-direction: column; gap: 9px; }
+.ptrow { display: grid; grid-template-columns: 92px 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
+.ptlabel { color: var(--text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Der Balken ist eine Skala, kein Schmuckband: eckig, mit Rasterfeld dahinter. */
+.ptbar { height: 9px; background: rgba(0, 0, 0, .4); border: 1px solid var(--edge); overflow: hidden; }
+.ptbar i { display: block; height: 100%; background: var(--gac, var(--leaf)); opacity: .8; min-width: 2px; }
+.ptval { font: 11.5px var(--mono); color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ── Downloads gruppiert Spiel → Welten ────────────────── */
+/* ★ `min(…, 100%)` statt einer nackten Mindestbreite. Eine Spalte, die 300 px
+   verlangt, wird auf einem 320-px-Schirm nicht schmaler: sie schiebt die Seite
+   waagerecht auseinander, und alles rechts davon liegt draussen. Gemessen am
+   2026-09-06 an der Guides-Seite (340 px Mindestbreite): die Seite war 362 px breit,
+   die sieben Kopier-Knoepfe lagen ausserhalb des Schirms und waren nur durch
+   seitliches Wischen erreichbar. Mit `min()` gibt die Spalte auf schmalen Geraeten
+   nach und behaelt sonst ihre Mindestbreite. */
+.dlgrid { grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); }
+.guidegrid { grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); }
+.dlgroup { background: var(--panel); border: 1px solid var(--edge); padding: 13px 15px; }
+.dlhead { display: flex; align-items: center; gap: 10px; font-size: 15px; margin-bottom: 6px; }
+.dlrow { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--edge); }
+.dlrow:last-child { border-bottom: 0; }
+.dlrow .meta { flex: 1; }
+.dlrow .meta b { font-size: 14px; }
+
+/* ── Landing: Fakten ───────────────────────────────────── */
+/* Jeder Block hat eine Ueberschrift, weil er einen eigenen Gedanken traegt. Ohne sie
+   standen hier drei gleich lange graue Absaetze nebeneinander, die man erst nach dem
+   Lesen auseinanderhalten konnte, und wer nur ueberfliegt, las gar keinen. */
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.fact { border-left: 1px solid var(--edge-hi); padding-left: 16px; }
+.fact h3 {
+  margin: 0 0 8px; color: var(--text);
+  font: 700 11px var(--mono); letter-spacing: .14em; text-transform: uppercase;
+}
+.fact p { margin: 0; color: var(--dim); font-size: 14px; line-height: 1.7; }
+
+/* ── Rechtsseiten ──────────────────────────────────────── */
+.legal-wrap { max-width: 720px; margin: 30px auto 40px; }
+.legal-wrap h1 { font: 700 18px var(--mono); letter-spacing: .12em; text-transform: uppercase; margin: 0 0 8px; }
+.legal-wrap .muted { color: var(--dim); font-size: 14px; }
+.legal-h { color: var(--leaf); margin: 22px 0 6px;
+  font: 700 10.5px var(--mono); letter-spacing: var(--sperr); text-transform: uppercase; }
+.legal-wrap p { margin: 4px 0; color: var(--text); font-size: 14px; }
+.foot .legal a { color: var(--dim); }
+.foot .legal a:hover { color: var(--leaf); }
+
+/* ── Schmale Schirme ───────────────────────────────────── */
+@media (max-width: 900px) {
+  .grid { grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
+  .activity-grid { grid-template-columns: 1fr; }
+  .facts { grid-template-columns: 1fr; gap: 14px; }
+}
+@media (max-width: 620px) {
+  .brand .sub { display: none; }
+  .hero { padding: 48px 0 44px; }
+  .hero-forest { height: 80px; }
+  .foot .wrap { flex-direction: column; align-items: flex-start; }
+  /* ★ Gemessen bei 390 px: die Leiste war 416 px breit, sichtbar 235. „Account", das
+     Rollen-Abzeichen und „Abmelden" lagen draussen. Sie SCROLLTE zwar (das war nie das
+     Problem), aber mit verstecktem Scrollbalken deutete nichts darauf hin: wer abmelden
+     wollte, sah eine Leiste, die am Rand einfach endet, und suchte den Knopf woanders.
+     Neben den Markennamen passt sie nicht, also darunter. Der Kopf wird eine Zeile
+     hoeher, dafuer ist die Navigation vollstaendig sichtbar statt zu 44 % verborgen. */
+  .topbar { padding: 10px 14px; flex-wrap: wrap; row-gap: 8px; }
+  .brand { font-size: 15px; }
+  /* ★ UMBRECHEN, nicht scrollen. Ein Verlauf am rechten Rand als Scroll-Hinweis war der
+     erste Versuch und die schlechtere Loesung: er blendet unbedingt aus, also auch dann,
+     wenn gar nichts ueberlaeuft, dann verblasst der letzte Knopf ohne Grund. Und die
+     Breite der Leiste ist nicht fest: sobald offene Bewerbungen anstehen, traegt „Admin"
+     ein Zaehler-Abzeichen und alles wird breiter. Genau dann braucht man die Leiste. */
+  .nav { width: 100%; flex-wrap: wrap; row-gap: 6px; }
+  .nav a { padding: 6px 7px; }
+  .nav > * { flex: none; }          /* sonst quetscht flex die Beschriftungen um */
+  /* Die eigene Rolle steht auf /account und zeigt sich ohnehin daran, ob „Admin" in der
+     Leiste auftaucht: auf dem schmalen Schirm ist sie reine Zier und kostet Platz. */
+  .topbar .role-badge { display: none; }
+  .section { padding: 26px 0; }
+  .actions button { flex: 1; justify-content: center; }
+  .steps { grid-template-columns: 1fr; }
+  .panel { overflow-x: auto; }   /* Admin-Tabellen scrollen statt sprengen */
+  /* ★ Fuer breite Zahlentabellen reicht das Scrollen nicht: bei sechs Spalten lagen
+     auf 390 px die letzten beiden ausserhalb des Schirms, darunter ausgerechnet
+     „ungenutzt" -- die Spalte, wegen der man die Tabelle ueberhaupt ansieht. Und der
+     Balken ist versteckt, also deutet nichts darauf hin, dass rechts noch etwas steht;
+     dieselbe Falle, die ein paar Zeilen weiter oben schon fuer die Navigationsleiste
+     beschrieben ist. Deshalb hier gestapelt statt geschoben: jede Zeile wird ein Block,
+     jeder Wert traegt seine Spaltenueberschrift aus data-label bei sich. Bewusst nur
+     fuer .stapel -- die bestehenden Admin-Tabellen bleiben, wie sie sind. */
+  .tbl.stapel thead { display: none; }
+  .tbl.stapel tr { display: block; padding: 8px 0; border-bottom: 1px solid var(--edge-hi); }
+  .tbl.stapel tr:last-child { border-bottom: 0; }
+  .tbl.stapel td { display: flex; justify-content: space-between; align-items: baseline;
+                   gap: 14px; border: 0; padding: 3px 10px; }
+  .tbl.stapel td::before {
+    content: attr(data-label); color: var(--dim); white-space: nowrap;
+    font: 700 10.5px var(--mono); letter-spacing: var(--sperr); text-transform: uppercase;
+  }
+  /* Die erste Zelle ist der Name der Zeile und braucht keine Beschriftung. */
+  .tbl.stapel td:first-child { font-weight: 600; padding-bottom: 6px; }
+  .tbl.stapel td:first-child::before { content: none; }
+  /* ★ 'overflow-wrap: anywhere' allein war hier falsch: mit den festen Spaltenbreiten
+     der Verlaufstabelle blieb fuer den Detailtext so wenig Raum, dass er BUCHSTABEN-
+     weise umbrach -- eine senkrechte Kette einzelner Zeichen. Lesbar wird es erst,
+     wenn die Zeile gestapelt ist und der Text die volle Breite bekommt. */
+  .tbl.stapel .mono { overflow-wrap: anywhere; }
+  .tbl.stapel .zeit { width: auto; }
+  .chips.jump { top: 50px; }
+  .snap-row { flex-wrap: wrap; }
+  .snap-btns { width: 100%; justify-content: flex-end; }
+  .feed-len { margin-left: 16px; width: 100%; }
+}
+@media (max-width: 460px) {
+  .grid { grid-template-columns: 1fr; }
+  .chips.tech { display: flex; }
+  .chip { flex: 1 1 100%; }
+}
+/* iOS zoomt bei Eingabefeldern unter 16 px beim Fokussieren, deshalb exakt 16px */
+input, textarea, select { font-size: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .card.busy::before, .card.busy::after, .card.skel, .dot.live, .badge.starting::before { animation: none; }
+  .card, .card::before, .card::after, .hero-live, .btn, button { transition: none; }
+}
+
+/* Gedruckt braucht niemand Raster, Vignette und Scanlinien. */
+@media print {
+  body::before, body::after, .scene-wrap::after { display: none; }
+}

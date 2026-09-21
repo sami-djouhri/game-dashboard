@@ -1,0 +1,26 @@
+{# Unsichtbarer Vorrat der Beitritts-Schritte, gleiches Muster wie _scenestore.html:
+   app.js klont beim Aufklappen `guide-<key>` in die Karte.
+
+   ★ WARUM AUF DER KARTE: die Adresse allein reicht fuer den Beitritt bei keinem
+   einzigen dieser Spiele. Terraria will tModLoader, DayZ den DZSA-Launcher, Avorion
+   geht ueberhaupt nur ueber die Serverliste. Wer den Server gerade geweckt hat, stand
+   bisher vor einer Adresse und musste die Seite wechseln, um zu erfahren, was er damit
+   tun soll.
+
+   ★ WARUM NUR DIE BEITRITTS-SCHRITTE: die Ersteinrichtung (Client kaufen, Mods,
+   Store-Link) macht man einmal, den Beitritt jedes Mal. Das eine gehoert auf die
+   Anleitungs-Seite, das andere an die Kachel. Damit tragen beide Orte dasselbe
+   Wissen aus derselben Quelle (guides.py), aber nicht dieselbe Aufgabe.
+
+   Die Adressen sind hier unmaskiert: /app gibt es nur mit Anmeldung. Die oeffentliche
+   Guides-Seite maskiert weiterhin ueber all_guides(public=True). #}
+<div hidden aria-hidden="true">
+  {% for g in guides %}
+  <template id="guide-{{ g.key }}">
+    <ol class="guide-steps">{% for step in g.join %}<li>{{ step|md }}</li>{% endfor %}</ol>
+    <p class="sub" style="margin:8px 0 0">
+      Client noch nicht eingerichtet? <a href="/guides#guide-{{ g.key }}">Ganze Anleitung für {{ g.label }} →</a>
+    </p>
+  </template>
+  {% endfor %}
+</div>
