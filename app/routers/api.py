@@ -106,7 +106,7 @@ async def start_game(game: str, request: Request, world: str | None = None,
     db.log_event(principal.username, "game.start", f"{game}{f' welt={world}' if world else ''} -> {outcome}")
     # Kein can_force mehr: eine Absage ist endgueltig, auch fuer Admins. Frueher bekam
     # ein Admin hier einen Erzwingen-Knopf angeboten, der eine laufende Partie beendet
-    # haette — genau das soll es nicht mehr geben (Owner-Ansage 2026-08-23).
+    # haette: genau das soll es nicht mehr geben (Owner-Ansage 2026-08-23).
     return {"outcome": outcome, "message": msg}
 
 
@@ -169,7 +169,7 @@ async def restart_game(game: str, request: Request,
 @router.post("/games/{game}/reserve")
 async def reserve_game(game: str, request: Request,
                        principal: Principal = Depends(require_admin)):
-    """Admin: Server reservieren — kein Auto-Off, keine Verdraengung.
+    """Admin: Server reservieren, kein Auto-Off, keine Verdraengung.
 
     Das ist der Ersatz fuer den frueheren Erzwingen-Knopf, aber mit umgekehrter
     Richtung: statt anderen den Platz wegzunehmen, sichert man sich den eigenen.
@@ -184,7 +184,7 @@ async def reserve_game(game: str, request: Request,
 @router.post("/games/{game}/release")
 async def release_game(game: str, request: Request,
                        principal: Principal = Depends(require_admin)):
-    """Admin: Reservierung aufheben — der Server geht wieder von selbst aus."""
+    """Admin: Reservierung aufheben, der Server geht wieder von selbst aus."""
     _csrf(request, principal)
     await _validate_game(game)
     outcome, msg = await bridge.set_reservierung(game, False)
@@ -274,7 +274,7 @@ async def delete_game_snapshot(game: str, request: Request,
 async def delete_game_world(game: str, request: Request,
                             principal: Principal = Depends(require_admin)):
     """Welt löschen (Arbiter schützt aktive/letzte Welt und legt vorher einen
-    Abschieds-Snapshot unter manual/ an — Wiederherstellung via Restore)."""
+    Abschieds-Snapshot unter manual/ an: Wiederherstellung via Restore)."""
     _csrf(request, principal)
     raw = await _validate_game(game)
     try:

@@ -1,9 +1,9 @@
-# LAUFZEIT-REZEPT gamehost (192.0.2.10) — hier laeuft die Clan-Seite wirklich.
+# LAUFZEIT-REZEPT gamehost (192.0.2.10), hier laeuft die Clan-Seite wirklich.
 #
 # Diese Datei wird beim Ausrollen nach /opt/game-dashboard/docker-compose.yml gelegt,
 # also NEBEN Dockerfile und app/ (Build-Kontext "." ist die Projektwurzel dort, nicht
 # dieser Unterordner). Der Ordner hier existiert nur, damit der Live-Stand versioniert
-# ist — vor 2026-08-23 war er es nicht: er kam per rsync von host und wurde vor Ort
+# ist, vor 2026-08-23 war er es nicht: er kam per rsync von host und wurde vor Ort
 # von Hand angepasst, ohne dass eine der Aenderungen je in einem Repo landete.
 #
 # Weicht bewusst vom host-Rezept (../docker-compose.yml) ab:
@@ -29,7 +29,7 @@ services:
       BRAND_NAME: "Greenleaf"
       PUBLIC_BASE_URL: "https://games.saganta.de"
       # Cookie nur ueber HTTPS senden (Caddy terminiert TLS). Fuer reine http-Tests
-      # via GD_COOKIE_SECURE=false ueberschreibbar — auf einer oeffentlichen Seite nie.
+      # via GD_COOKIE_SECURE=false ueberschreibbar, auf einer oeffentlichen Seite nie.
       COOKIE_SECURE: "${GD_COOKIE_SECURE:-true}"
       # Owner-Bootstrap (leerer DB): kommt aus .env (nie committen). Ist owner_password
       # leer, erzeugt der Start ein Zufallspasswort -> data/OWNER_CREDENTIALS.txt.

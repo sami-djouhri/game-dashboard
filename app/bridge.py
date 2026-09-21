@@ -31,7 +31,7 @@ def _invalidate_status() -> None:
     _status_cache["ts"] = 0.0
 
 
-# Dauerlaeufer (DayZ auf netcup) stehen NICHT in der Arbiter-Registry — ihre Spielerzahl
+# Dauerlaeufer (DayZ auf netcup) stehen NICHT in der Arbiter-Registry: ihre Spielerzahl
 # kommt per Steam-Query direkt vom Server. Eigener, laengerer Cache: die Abfrage ist ein
 # UDP-Roundtrip uebers Internet, den nicht jeder Seitenaufruf neu bezahlen soll.
 _ALWAYS_ON_TTL_S = 20.0
@@ -51,7 +51,7 @@ def _tcp_offen(host: str, port: int, timeout: float = 2.5) -> bool:
 def _dauerlaeufer_info(cfg: dict) -> dict | None:
     """Zustand eines Dauerlaeufers je nach hinterlegter Probe-Art.
 
-    Bei `tcp` bleibt `players` bewusst None — "laeuft" und "niemand ist drauf" sind
+    Bei `tcp` bleibt `players` bewusst None: "laeuft" und "niemand ist drauf" sind
     zweierlei. Bei `keine` ist der Zustand von aussen gar nicht feststellbar; das wird
     als solches gemeldet und nicht als Ausfall.
     """
@@ -69,7 +69,7 @@ def _a2s_info(host: str, port: int, timeout: float = 2.5) -> dict | None:
     """Steam-Query (A2S_INFO). None, wenn der Server nicht antwortet.
 
     Der Challenge-Token muss an die KOMPLETTE Anfrage inklusive Nullbyte angehaengt
-    werden — ohne das Nullbyte bleibt die zweite Anfrage unbeantwortet.
+    werden, ohne das Nullbyte bleibt die zweite Anfrage unbeantwortet.
     """
     req = b"\xff\xff\xff\xffTSource Engine Query\x00"
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -137,7 +137,7 @@ async def post_action(action: str, game: str,
 
     world: gewuenschte Welt (nur multi_world-Games; wake/restart). Der Arbiter
     validiert gegen seine Registry und lehnt einen Welt-Wechsel bei laufendem
-    Server ab (rc==3) — Wechsel = erst stoppen, dann mit neuer Welt starten.
+    Server ab (rc==3): Wechsel = erst stoppen, dann mit neuer Welt starten.
 
     Rueckgabe (outcome, menschliche Meldung), outcome in {ok, conflict, error}.
     'conflict' = Arbiter lehnt ab (rc==3), weil eine belegte oder reservierte
@@ -187,7 +187,7 @@ async def set_reservierung(game: str, an: bool) -> tuple[str, str]:
     """Reservierung setzen/aufheben: der Server bleibt stehen, bis sie faellt.
 
     Gedacht fuer den Fall, dass jemand gleich spielen will oder an einer Welt
-    arbeitet — ohne den Schalter koennte ein leerer Server jederzeit dem
+    arbeitet, ohne den Schalter koennte ein leerer Server jederzeit dem
     Startwunsch eines anderen weichen oder ins Auto-Off laufen.
     Rueckgabe (outcome, Meldung), outcome in {ok, error}.
     """
@@ -322,11 +322,11 @@ def _tail_log(data: dict) -> str:
 
 
 def _conflict_msg(data: dict) -> str:
-    """Der Arbiter schreibt seine Absage im Klartext ins Log — die wird 1:1 gezeigt.
+    """Der Arbiter schreibt seine Absage im Klartext ins Log, die wird 1:1 gezeigt.
 
     Der Rahmensatz nennt nur noch das Ergebnis. Frueher stand hier '.18 hat nur einen
     RAM-Slot': das galt, als nur ein Spiel gleichzeitig laufen konnte, und stimmt seit
-    dem Umzug auf den Spiele-VPS doppelt nicht mehr — dort laufen mehrere nebeneinander,
+    dem Umzug auf den Spiele-VPS doppelt nicht mehr, dort laufen mehrere nebeneinander,
     und die Grenze ist der Speicher, nicht ein Slot.
     """
     reason = ""

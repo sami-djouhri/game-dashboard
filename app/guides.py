@@ -1,12 +1,12 @@
 """Beitritts- und Installations-Anleitungen je Spiel.
 
 Reine Inhalts-Daten (kein Live-Zustand). Die Adressen stehen NICHT hier, sondern
-kommen aus `app.games` (die eine Wahrheit) — die Texte tragen nur Platzhalter.
+kommen aus `app.games` (die eine Wahrheit), die Texte tragen nur Platzhalter.
 Passwoerter/Details, die nicht oeffentlich sein sollen, werden im Mitglieder-
 Bereich ergaenzt, nicht hier.
 
 Anonyme Besucher sehen die Guides OHNE Server-Adressen (all_guides(public=True)
-maskiert IP/Ports ueberall) — Adressen gibt es erst nach dem Login.
+maskiert IP/Ports ueberall): Adressen gibt es erst nach dem Login.
 """
 from __future__ import annotations
 

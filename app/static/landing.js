@@ -46,7 +46,7 @@ async function pulse() {
 
   if (hl && txt) {
     // Steuerung nicht erreichbar: die Kachelliste ist dann leer oder unvollstaendig, und
-    // "gerade ruhig, jederzeit weckbar" waere ein falsches Versprechen — wecken geht ja
+    // "gerade ruhig, jederzeit weckbar" waere ein falsches Versprechen: wecken geht ja
     // gerade nicht. Bewusst ohne Innenzustand: die Seite ist oeffentlich, die genaue
     // Ursache steht im Log und in der Mitgliederansicht.
     if (s.arbiter_ok === false) {

@@ -1,6 +1,6 @@
 // Misst, was auf einem Bild nicht zu zaehlen ist: liegt ein Bedienelement ausserhalb
 // des Schirms? Ein Screenshot zeigt die Kante, aber nicht, ob dahinter noch etwas
-// steht — und eine Leiste mit verstecktem Scrollbalken sieht abgeschnitten genauso
+// steht, und eine Leiste mit verstecktem Scrollbalken sieht abgeschnitten genauso
 // aus wie zu Ende. Genau dieser Unterschied war der Befund vom 2026-08-27.
 //
 // Aufruf aus ansehen.sh; Rueckgabe 1, wenn etwas ausserhalb liegt.

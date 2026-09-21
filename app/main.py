@@ -1,7 +1,7 @@
 """game-dashboard, „Greenleaf" Clan-Seite vor der wake-bridge.
 
 Laeuft auf dem Spiele-VPS, auf demselben Wirt wie die Spielserver und ihr
-Arbiter — das Gegenstueck zum dev-portal im Heimnetz, nur fuer die Spiele.
+Arbiter, das Gegenstueck zum dev-portal im Heimnetz, nur fuer die Spiele.
 Bis 2026-08-22 stand es auf host und sprach ueber das LAN nach Node .18;
 diese Instanz ist stillgelegt (Compose-Profil), der Baum dort bleibt die
 kanonische Quelle.

@@ -2,13 +2,13 @@
 
 Quelle: die taeglichen Snapshots unter `/var/backups/game-saves/` auf dem
 Spiele-VPS, die `welten-schnappschuss.timer` (05:23) dort nach settings.worlds_dir
-spiegelt — also derselbe Wirt, kein Netzweg. Die App liest NUR lokal und serviert
+spiegelt, also derselbe Wirt, kein Netzweg. Die App liest NUR lokal und serviert
 read-only, kein SSH-Key/Fetch im Container.
 
 Layout seit dem Per-Welt-Umbau:
   <game>.tar.gz            Single-World-Games (dayz/valheim/factorio/avorion/minecraft)
   <game>/<welt>.tar.gz     Multi-World-Games (terraria/zomboid), ein Tar je Welt
-Manuelle Admin-Snapshots (manual/) werden bewusst NICHT gespiegelt — die laufen
+Manuelle Admin-Snapshots (manual/) werden bewusst NICHT gespiegelt, die laufen
 live ueber die wake-bridge im Admin-Bereich.
 
 Zugriff ist im Router auf admin-verifizierte Mitglieder beschraenkt.

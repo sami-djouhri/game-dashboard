@@ -134,12 +134,12 @@ async def require_verified(principal: Principal = Depends(current_user)) -> Prin
 
 def check_csrf(request: Request, principal: Principal, token: Optional[str]) -> None:
     """CSRF-Schutz. PRIMAER: das Per-Session-Token (Formularfeld/Header) muss zum
-    Session-Token passen — das ist zusammen mit SameSite=Lax der eigentliche Schutz.
+    Session-Token passen, das ist zusammen mit SameSite=Lax der eigentliche Schutz.
 
     Der Origin-Abgleich ist nur best-effort (Defense-in-Depth) und wird bewusst
     NICHT hart erzwungen: hinter cloudflared/dev-portal weicht der Host vom oeffentlichen
     Hostnamen ab (z. B. games.saganta.de -> games.home.arpa, oder ein
-    trycloudflare-Tunnel) — ein harter Vergleich wuerde legitime POSTs 403en.
+    trycloudflare-Tunnel), ein harter Vergleich wuerde legitime POSTs 403en.
     Ein Mismatch wird daher nur protokolliert."""
     if not principal or not principal.csrf or not constant_eq(principal.csrf, token or ""):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CSRF-Token ungültig")

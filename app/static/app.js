@@ -4,18 +4,18 @@
 const POLL_MS = 5000;
 // Laufende Vorgaenge, EINER JE SPIEL. Frueher war das ein einziges globales Flag: waehrend
 // Valheim startete, waren die Knoepfe aller sieben Kacheln tot. Das passte zu der Zeit, als
-// nur ein Server gleichzeitig laufen durfte — seit dem Mehr-Spiel-Umbau des Arbiters ist es
+// nur ein Server gleichzeitig laufen durfte, seit dem Mehr-Spiel-Umbau des Arbiters ist es
 // eine Sperre, die es in der Sache nicht mehr gibt.
 const busy = new Set();
 let ROLE = { is_admin: false, may_start: false };
 
 const $ = (id) => document.getElementById(id);
 const CSRF = (document.querySelector('meta[name="csrf"]') || {}).content || "";
-// always_on/offline: Server ausserhalb der Arbiter-Registry — nicht weckbar, eigene Labels.
+// always_on/offline: Server ausserhalb der Arbiter-Registry, nicht weckbar, eigene Labels.
 // "unbekannt" trifft eine Rolle, ueber die der Arbiter gerade nichts sagt (Bridge weg).
-// Das ist etwas anderes als "schlaeft" — behaupten wuerde man sonst Ruhe, die keiner mass.
+// Das ist etwas anderes als "schlaeft": behaupten wuerde man sonst Ruhe, die keiner mass.
 // "starting"/"stumm" trennen "Startbefehl abgesetzt, antwortet noch nicht" von "antwortet
-// seit Minuten nicht mehr" — beides sah frueher wie "laeuft" aus.
+// seit Minuten nicht mehr": beides sah frueher wie "laeuft" aus.
 const STATE_LABEL = { active: "läuft", sleeping: "schläft", blocked: "belegt",
                       starting: "startet …", stumm: "antwortet nicht",
                       always_on: "dauerhaft an", offline: "keine Antwort",
@@ -43,7 +43,7 @@ async function api(path, method = "GET", body = null) {
 }
 
 // 401 heisst: die Sitzung ist weg (abgelaufen, abgemeldet, vom Admin gesperrt).
-// Weitermachen hat dann keinen Zweck — jeder Klick faende dieselbe tote Sitzung.
+// Weitermachen hat dann keinen Zweck: jeder Klick faende dieselbe tote Sitzung.
 function abgemeldet(e) {
   if (e && e.status === 401) { location.href = "/login"; return true; }
   return false;
@@ -72,7 +72,7 @@ function sceneFor(key) {
 
 // ── Dialog statt prompt()/confirm() ──────────────────────────────────
 // Die Browser-Fenster waren auf dem Handy kaum lesbar, nicht gestaltbar und lassen sich
-// in manchen Browsern dauerhaft unterdruecken — dann verschwindet ohne Rueckmeldung auch
+// in manchen Browsern dauerhaft unterdruecken, dann verschwindet ohne Rueckmeldung auch
 // die Sicherheitsabfrage vor dem Zurueckspielen. Ein <dialog> ist Teil der Seite:
 // Escape schliesst, Enter bestaetigt, der Fokus bleibt gefangen.
 //
@@ -141,15 +141,15 @@ function toast(msg, kind = "ok", ms = 6000) {
 
 // Zeigt den Speicher, gegen den die Kacheln tatsaechlich rechnen. Solange nichts
 // startet, sind roh und wirksam derselbe Wert und es steht nur eine Zahl da. Startet
-// gerade etwas, hat es seinen Speicher noch nicht belegt, bekommt ihn aber sicher —
+// gerade etwas, hat es seinen Speicher noch nicht belegt, bekommt ihn aber sicher,
 // dann nennt die Zeile den wirksamen Wert und sagt dazu, wo der Rest hin ist. Vorher
 // stand hier der Rohwert, waehrend die Kachel daneben "braucht 2,4 GB frei, so viel
 // ist es gerade nicht" schrieb: ein Widerspruch, den man der Seite anlastet.
-// Deutsches Dezimaltrennzeichen — die einzige Stelle, an der Groessen formatiert werden.
+// Deutsches Dezimaltrennzeichen, die einzige Stelle, an der Groessen formatiert werden.
 const fmtGB = (mb) => (mb / 1024).toFixed(1).replace(".", ",") + " GB";
 
 // ★ Dieselbe Zahlenschreibweise wie die Kacheln. Bis 2026-08-27 rechnete diese Zeile mit
-// toFixed(1) und schrieb „6.0 GB", waehrend die Kachel darunter „8,6 GB frei" verlangte —
+// toFixed(1) und schrieb „6.0 GB", waehrend die Kachel darunter „8,6 GB frei" verlangte,
 // Punkt und Komma fuer dieselbe Groesse auf einem Bild. Und die Ueberschrift sprach von
 // „RAM" und „Node", wo der Satz am Fuss derselben Seite „Arbeitsspeicher" sagt: das hier
 // ist eine Clan-Seite fuer Spieler, nicht die Ops-Ansicht.
@@ -168,7 +168,7 @@ let snapOpen = null;
 const snapCache = {};
 const gameInfo = {};
 
-// "vor 2 min" statt einer nackten Sekundenzahl — waehrend eines Startvorgangs will man
+// "vor 2 min" statt einer nackten Sekundenzahl: waehrend eines Startvorgangs will man
 // wissen, wie lange es schon dauert, nicht wie viele Sekunden vergangen sind.
 function fmtDauer(s) {
   if (s == null) return "";
@@ -227,7 +227,7 @@ function modsListe(g) {
 function card(g) {
   // Ueberbrueckung der Tick-Luecke: Solange der Arbiter den eigenen Startbefehl noch nicht
   // im Status hat, gilt unser Wissen. Sobald er das Spiel als laufend fuehrt, faellt der
-  // Vermerk weg — und nach ANLAUF_MS ebenfalls, damit ein fehlgeschlagener Start nicht
+  // Vermerk weg, und nach ANLAUF_MS ebenfalls, damit ein fehlgeschlagener Start nicht
   // ewig als "startet …" stehen bleibt und die Kachel wieder ehrlich "schläft" sagt.
   const seitKlick = frischGestartet.get(g.key);
   if (seitKlick !== undefined) {
@@ -272,7 +272,7 @@ function card(g) {
   // Speicher-Vorschau. ★ Bewusst nur ein HINWEIS, kein gesperrter Knopf: reicht der freie
   // Speicher nicht, sagt der Arbiter nicht ab, sondern raeumt zuerst leere, ungeschuetzte
   // Server ab (_evict_for_ram) und startet dann meist doch. Ein deaktivierter Knopf waere
-  // eine Sperre, die es in der Sache nicht gibt — er wuerde Starts verhindern, die
+  // eine Sperre, die es in der Sache nicht gibt, er wuerde Starts verhindern, die
   // funktioniert haetten. Endgueltig abgelehnt wird nur, wenn danach noch immer zu wenig
   // frei ist UND jemand spielt; diese Absage kommt im Klartext vom Arbiter zurueck.
   const zuEng = g.state === "sleeping" && g.startbar === false;
@@ -291,7 +291,7 @@ function card(g) {
   const isMulti = g.multi_world && (g.worlds || []).length > 0;
 
   // Multi-Welten: schlafend darf jedes Mitglied die Welt fuers Starten waehlen.
-  // Der Wechsel einer laufenden Welt sitzt im Welten-Panel (Admin), nicht mehr hier —
+  // Der Wechsel einer laufenden Welt sitzt im Welten-Panel (Admin), nicht mehr hier,
   // zwei Auswahlfelder mit gleichem Aussehen und verschiedener Wirkung auf einer Karte
   // waren die Vorlage fuer den falschen Klick.
   const worldSel = isMulti ? `
@@ -301,16 +301,16 @@ function card(g) {
   const worldMeta = (isMulti && laeuft)
     ? `<span class="world-tag">${capWorld(g.world)}</span>` : "";
 
-  // ★ Auf einer LAUFENDEN Karte ist ein grauer „Starten" reine Fuellung — und er stand an
+  // ★ Auf einer LAUFENDEN Karte ist ein grauer „Starten" reine Fuellung, und er stand an
   // erster Stelle, vor „Neustart"/„Stopp", auf dem Handy als volle Zeile. Was der Server
   // gerade tut, sagt schon das Abzeichen daneben. Bei „belegt"/„unbekannt" bleibt er
   // dagegen sichtbar und grau: dort sagt er etwas, naemlich dass es den Weg gibt, nur
-  // gerade nicht — genau der Unterschied, den ein weggelassener Knopf verschluckt.
+  // gerade nicht: genau der Unterschied, den ein weggelassener Knopf verschluckt.
   const startBtn = (ROLE.may_start && !dauerlaeufer && !laeuft)
     ? `${g.state === "sleeping" ? worldSel : ""}<button class="primary" data-act="start" data-game="${g.key}" ${canStart ? "" : "disabled"}>Starten</button>` : "";
   // Gegenstueck zur Regel oben: auf einer SCHLAFENDEN Karte tun „Neustart" und „Stopp"
   // nichts, und dass nichts laeuft, steht schon im Abzeichen. Bei „belegt"/„unbekannt"
-  // bleiben beide grau stehen — dort ist die Faehigkeit vorhanden, nur der Zeitpunkt
+  // bleiben beide grau stehen, dort ist die Faehigkeit vorhanden, nur der Zeitpunkt
   // nicht, und das erklaert das Banner oben. Ein Knopf gehoert auf die Karte, wenn er
   // etwas tut oder wenn sein Nichtstun nicht schon woanders auf der Karte steht.
   const unklar = g.state === "blocked" || g.state === "unbekannt";
@@ -374,7 +374,7 @@ function card(g) {
 
 // Gerade angestossene Starts: Spiel -> Zeitpunkt des Klicks.
 // ★ Der Arbiter schreibt seinen Status nur im 60-Sekunden-Tick. Zwischen dem Startbefehl
-// und dem naechsten Tick meldet er das Spiel unveraendert als "schlaeft" — die Kachel
+// und dem naechsten Tick meldet er das Spiel unveraendert als "schlaeft", die Kachel
 // sprang also nach dem Klick zurueck auf schlafend, obwohl der Server hochfuhr. Das ist
 // die Situation, in der jeder ein zweites Mal klickt. Bis der Arbiter den Start bestaetigt,
 // zeigen wir hier, was wir sicher wissen: wir haben gerade gestartet.
@@ -398,7 +398,7 @@ function markBusy() {
 }
 
 // ── Welten (Admin): anlegen, wechseln, loeschen ───────────────────────
-// Bis 2026-08-24 lagen diese drei Dinge an drei Stellen — ein Auswahlfeld in der
+// Bis 2026-08-24 lagen diese drei Dinge an drei Stellen, ein Auswahlfeld in der
 // Kopfzeile, ein kleiner grauer "Neue Welt"-Knopf zwischen den Steuerknoepfen und
 // das Loeschen versteckt im Sicherungen-Panel. Wer nicht wusste, dass es die
 // Funktion gibt, fand sie nicht. Jetzt ein Panel, das alles zeigt und den einen
@@ -483,7 +483,7 @@ async function worldAction(act, game, world) {
   }
   if (act === "switch") {
     // Laeuft der Server, ist der Wechsel ein Neustart mit anderer Welt (Speichern +
-    // Beenden + Start). Steht er still, ist es schlicht ein Start mit dieser Welt —
+    // Beenden + Start). Steht er still, ist es schlicht ein Start mit dieser Welt,
     // /switch wuerde dort einen Neustart von etwas verlangen, das gar nicht laeuft.
     const g = gameInfo[game] || {};
     const laeuft = g.state === "active" || g.state === "starting" || g.state === "stumm";
@@ -521,7 +521,7 @@ function renderSnapPanel(game) {
   const data = snapCache[game];
   const g = gameInfo[game] || {};
   if (!data) { panel.innerHTML = `<div class="loading" style="padding:10px 2px">Lade Sicherungen …</div>`; return; }
-  // Auch ein startender oder stummer Server schreibt gleich wieder in seine Welt —
+  // Auch ein startender oder stummer Server schreibt gleich wieder in seine Welt,
   // ein Restore waere dann ein Wettrennen zwischen Arbiter und Spielprozess.
   const running = g.state === "active" || g.state === "starting" || g.state === "stumm";
   const rows = (data.snapshots || []).map(s => `
@@ -537,7 +537,7 @@ function renderSnapPanel(game) {
         <button class="tiny danger" data-snapact="delsnap" data-game="${game}" data-file="${esc(s.file)}">Löschen</button>
       </span>
     </div>`).join("");
-  // Das Welten-Loeschen sass frueher hier als kleines "×" hinter einem Namens-Chip —
+  // Das Welten-Loeschen sass frueher hier als kleines "×" hinter einem Namens-Chip,
   // die folgenreichste Aktion der Seite, versteckt im Sicherungen-Panel. Sie steht jetzt
   // im Welten-Panel, wo man sie sucht.
   panel.innerHTML = `
@@ -665,7 +665,7 @@ async function doAction(act, game, weltVorgabe = "") {
     toast(`${capWorld(world)} läuft bereits.`, "warn"); return;
   }
   busy.add(game); markBusy();
-  // Nur die Knoepfe dieser Karte sperren — die anderen Karten bleiben bedienbar.
+  // Nur die Knoepfe dieser Karte sperren, die anderen Karten bleiben bedienbar.
   const eigene = $("grid").querySelector(`.card[data-game="${game}"]`);
   if (eigene) eigene.querySelectorAll("button").forEach(b => b.disabled = true);
   const verb = { start: "Starte", stop: "Stoppe", restart: "Starte neu", switch: "Wechsle Welt auf",
@@ -676,7 +676,7 @@ async function doAction(act, game, weltVorgabe = "") {
     const res = await api(`/api/games/${game}/${act}${q}`, "POST");
     if (res.outcome === "ok") {
       // Nach dem Startbefehl ist der Server noch nicht da. Das hier zu sagen ist der
-      // Unterschied zwischen "fertig" und "gleich" — die Kachel zeigt danach "startet …".
+      // Unterschied zwischen "fertig" und "gleich", die Kachel zeigt danach "startet …".
       if (act === "start" || act === "switch" || act === "restart") {
         frischGestartet.set(game, Date.now());
         toast(`${game}: ${res.message || "gestartet"}. Er braucht jetzt 1–3 Minuten, bis der Beitritt klappt.`);
@@ -695,7 +695,7 @@ async function doAction(act, game, weltVorgabe = "") {
 }
 
 // Aussetzer der eigenen Verbindung, seit dem letzten geglueckten Abruf. Eine
-// Kachelwand, die stehen bleibt, ist von einer aktuellen nicht zu unterscheiden —
+// Kachelwand, die stehen bleibt, ist von einer aktuellen nicht zu unterscheiden,
 // man liest den alten Stand als den jetzigen und tritt einem Server bei, der
 // laengst wieder schlaeft. Erst ab dem dritten Fehlversuch gemeldet, damit ein
 // einzelner Aussetzer keine Warnung blinken laesst.
@@ -726,7 +726,7 @@ async function refresh() {
     $("node-ram").innerHTML = ramBar(s.ram_mb, s.frei_mb, s.startend_mb);
     const hint = $("slot-hint");
     // Bridge weg: die Dauerlaeufer stehen trotzdem da (eigene Probe), alles andere ist
-    // unbekannt. Das gehoert gesagt — eine Liste ohne Hinweis liest sich wie Normalbetrieb.
+    // unbekannt. Das gehoert gesagt, eine Liste ohne Hinweis liest sich wie Normalbetrieb.
     if (s.arbiter_ok === false) {
       hint.textContent = "Steuerung nicht erreichbar, die Zustände unten sind ungeprüft. "
                        + "Starten und Stoppen geht gerade nicht.";
@@ -735,7 +735,7 @@ async function refresh() {
       (s.games || []).forEach(g => grid0.appendChild(card(g)));
       return;
     }
-    // „Belegt" gibt es nur noch, wenn das Windows-Lab im Wartungsmodus reserviert ist —
+    // „Belegt" gibt es nur noch, wenn das Windows-Lab im Wartungsmodus reserviert ist,
     // zwischen Spielen blockiert nichts mehr. Der frühere Zusatz „(oder du erzwingst)"
     // stand hier noch, nachdem der Erzwingen-Knopf am 2026-08-23 ersatzlos entfernt
     // wurde: ein Angebot, das es nicht gibt, schickt Admins auf die Suche danach.
@@ -762,14 +762,14 @@ async function refresh() {
 }
 
 // Kein Poll, solange niemand hinsieht. Bei offenem Hintergrund-Tab waren das rund um die
-// Uhr 17.000 Statusabfragen am Tag je Tab — jede eine Runde durch Bridge und Arbiter.
+// Uhr 17.000 Statusabfragen am Tag je Tab: jede eine Runde durch Bridge und Arbiter.
 // Beim Zurueckkehren wird sofort aktualisiert, damit man nie einen alten Stand sieht.
 async function tick() {
   if (!document.hidden && busy.size === 0) await refresh();
   setTimeout(tick, POLL_MS);
 }
 (async function () {
-  // Delegierte Listener EINMAL am (statischen) Grid-Element — uebersteht jeden
+  // Delegierte Listener EINMAL am (statischen) Grid-Element: uebersteht jeden
   // innerHTML-Rebuild der Karten.
   $("grid").addEventListener("click", (ev) => {
     const s = ev.target.closest("button[data-snapact]");

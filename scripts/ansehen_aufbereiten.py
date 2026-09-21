@@ -2,7 +2,7 @@
 """Macht die gerenderten Seiten offline-tauglich und stellt der Oberflaeche Antworten.
 
 Die Kacheln entstehen erst im Browser aus /api/status. Ohne gestellte Antwort
-fotografiert man ein leeres Gitter mit drei grauen Platzhaltern — also genau das,
+fotografiert man ein leeres Gitter mit drei grauen Platzhaltern, also genau das,
 was man nicht pruefen wollte.
 
 ★ Die gestellten Daten zeigen ALLE Kachel-Zustaende auf einem Bild: laufend mit
@@ -120,7 +120,7 @@ PUBLIC = {
               for g in STATUS["games"]],
 }
 
-# Der Abfang muss VOR app.js laufen und alles beantworten, was die Seite fragt —
+# Der Abfang muss VOR app.js laufen und alles beantworten, was die Seite fragt:
 # ein durchgereichter Aufruf ins Leere endete sonst im neuen Stillstands-Banner und
 # faerbte das Gitter blass, also ausgerechnet den Zustand, den man nicht sehen will.
 STUB = """<script>
@@ -147,7 +147,7 @@ STUB = """<script>
 def aufbereiten(roh: str, ziel: str) -> None:
     html = (OUT / roh).read_text(encoding="utf-8")
     html = html.replace('"/static/', '"').replace("'/static/", "'")
-    # Der Abfang vor das erste <script src=...> — danach waere app.js schon gelaufen.
+    # Der Abfang vor das erste <script src=...>: danach waere app.js schon gelaufen.
     i = html.find("<script src=")
     if i == -1:
         i = html.rfind("</body>")

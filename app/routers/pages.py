@@ -214,7 +214,7 @@ async def dashboard(request: Request, principal: Principal = Depends(optional_us
 
 @router.get("/guides", response_class=HTMLResponse)
 async def guides_page(request: Request, principal: Principal = Depends(optional_user)):
-    # Anonym: Server-Adressen maskiert — Adressen gibt es erst nach dem Login.
+    # Anonym: Server-Adressen maskiert, Adressen gibt es erst nach dem Login.
     # Mods sind kein Geheimnis und bleiben auch anonym sichtbar: wer sich bewirbt,
     # will genau wissen, was hier gespielt wird.
     return render(request, "guides.html", principal,

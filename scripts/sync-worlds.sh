@@ -6,7 +6,7 @@
 # Layout seit dem Per-Welt-Umbau:
 #   <game>.tar.gz          Single-World-Games
 #   <game>/<welt>.tar.gz   Multi-World-Games (terraria/zomboid), ein Tar je Welt
-# manual/ (Admin-Snapshots) wird bewusst NICHT gespiegelt — die laufen live über
+# manual/ (Admin-Snapshots) wird bewusst NICHT gespiegelt, die laufen live über
 # die wake-bridge. --delete räumt gelöschte Welten auch hier ab; manuelle
 # Alt-Dateien (zomboid-vor-*.tar.gz) schützt der manual-Exclude nicht, daher
 # --delete nur innerhalb der Game-Unterverzeichnisse (filter-Regeln unten).

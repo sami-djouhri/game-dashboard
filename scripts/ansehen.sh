@@ -6,7 +6,7 @@
 #
 # ★ WARUM ES DIESES SKRIPT GIBT (2026-08-27):
 # Die Kacheln entstehen erst im Browser aus /api/status. Wer nur den Quelltext liest,
-# sieht ein leeres Gitter und haelt die Seite fuer in Ordnung — Stauchungen, fehlende
+# sieht ein leeres Gitter und haelt die Seite fuer in Ordnung: Stauchungen, fehlende
 # Umlaute, unlesbare Zustaende und Knoepfe, die sich ueberlagern, zeigen sich
 # ausschliesslich im gerenderten Bild.
 #
@@ -14,7 +14,7 @@
 # demselben Quelltext, mit erfundenen Daten. Zwei Gruende:
 #   1. Die Live-Datenbank haelt echte Konten. Ein Prueflauf darf dort nichts anlegen.
 #   2. Live sieht man nur den Zustand, der GERADE gilt. Der Prueflauf zeigt alle
-#      Kachel-Zustaende nebeneinander — laufend, schlafend, startend, stumm, zu wenig
+#      Kachel-Zustaende nebeneinander: laufend, schlafend, startend, stumm, zu wenig
 #      Speicher, Mehr-Welten. Genau die Faelle, die man sonst nie zu Gesicht bekommt.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
@@ -34,7 +34,7 @@ rm -f "$OUT"/*.png "$OUT"/*.html 2>/dev/null || true
 echo "== 1. Wegwerf-Instanz bauen =="
 docker build -q -t homelab/game-dashboard:ansehen "$HERE" >/dev/null
 
-echo "== 2. starten (eigene, leere Datenbank — kein Volume, kein Netz) =="
+echo "== 2. starten (eigene, leere Datenbank, kein Volume, kein Netz) =="
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 # --network none geht nicht: wir sprechen ihn ueber den veroeffentlichten Port an.
 # Kein Volume -> die SQLite lebt und stirbt mit dem Container.
@@ -140,7 +140,7 @@ echo "== 4. offline-tauglich machen + Antworten stellen =="
 python3 "$HERE/scripts/ansehen_aufbereiten.py" "$OUT"
 
 echo "== 5. Bilder =="
-# ★ Das Image hat ENTRYPOINT ["tini","--"] und KEIN CMD — der Browser muss als erstes
+# ★ Das Image hat ENTRYPOINT ["tini","--"] und KEIN CMD, der Browser muss als erstes
 # Argument selbst genannt werden. Ohne ihn scheitert tini mit "exec --no-sandbox failed",
 # was wie ein falsches Flag aussieht und keins ist.
 schuss() {  # datei breite hoehe name
@@ -174,7 +174,7 @@ docker run --rm -v "$OUT:/work" -u "$(id -u):$(id -g)" -e HOME=/tmp \
 
 echo "== 7. Ueberlauf + Kontrast messen =="
 # Der Screenshot zeigt eine Kante, aber nicht, ob dahinter noch etwas steht. Eine Leiste
-# mit verstecktem Scrollbalken sieht abgeschnitten genauso aus wie zu Ende — genau dieser
+# mit verstecktem Scrollbalken sieht abgeschnitten genauso aus wie zu Ende: genau dieser
 # Unterschied war der Befund vom 2026-08-27 (Account/Abmelden lagen draussen).
 cp "$HERE/scripts/ansehen_messen.js" "$OUT/messen.js"
 docker run --rm -v "$OUT:/work" -u "$(id -u):$(id -g)" -e HOME=/tmp \

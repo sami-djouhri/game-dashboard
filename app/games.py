@@ -81,7 +81,7 @@ def address(game: str) -> str:
 
 
 # Statische Anzeige-Metadaten je Game-Key (arbiter-Name). Optional, Fallback unten.
-# color = Akzentfarbe der Spiel-Identitaet (Karten-Topline, Emoji-Kachel, Badges) —
+# color = Akzentfarbe der Spiel-Identitaet (Karten-Topline, Emoji-Kachel, Badges),
 # entsaettigt genug fuers dunkle Wald-Theme.
 GAME_META: dict[str, dict] = {
     "dayz":      {"label": "DayZ",            "emoji": "🎮", "color": "#97a45e", "join": f"DZSA-Launcher → „Greenleaf Forest“ ODER {address('dayz')}",   "slots": 4},
@@ -109,7 +109,7 @@ STARTFENSTER_S = 360
 #         Antwort" fuer einen Server, der in Wahrheit laeuft.
 #
 # Seit dem 2026-08-22 ist die Liste LEER: alle Spielserver liegen auf dem Spiele-VPS und
-# werden dort vom zweiten Arbiter verwaltet — sie sind wieder weckbar und ihr Zustand steht
+# werden dort vom zweiten Arbiter verwaltet, sie sind wieder weckbar und ihr Zustand steht
 # im Arbiter-Status. Ein Eintrag hier waere jetzt schaedlich: die Seite meldete "dauerhaft
 # an" fuer einen Server, der gerade schlaeft, und verschwiege den Weck-Knopf. Der
 # Mechanismus bleibt fuer den naechsten Server, der ausserhalb steht.
@@ -132,7 +132,7 @@ def build_view(status: dict, always_on: dict | None = None,
     Das Lab erscheint hoechstens als Grund „Slot belegt", nie als steuerbare Kachel.
 
     `arbiter_ok=False` heisst: die Bridge hat nicht geantwortet, `status` ist leer.
-    Die Dauerlaeufer werden trotzdem angezeigt — sie haengen gar nicht am Arbiter,
+    Die Dauerlaeufer werden trotzdem angezeigt, sie haengen gar nicht am Arbiter,
     ihr Zustand kommt aus der eigenen Probe. Alles, was der Arbiter verwaltet, ist
     dann UNBEKANNT und wird auch so beschriftet: eine leere Seite sieht aus wie
     "nichts laeuft", und das waere die falsche Auskunft.
@@ -157,14 +157,14 @@ def build_view(status: dict, always_on: dict | None = None,
     # Startbarkeit VOR dem Klick: der Arbiter nennt in games.bedarf die Schwelle, gegen
     # die er selbst prueft (min_free_mb je Spiel), und zieht dabei ab, was gerade
     # startende Spiele noch belegen werden. Beides hier nachzurechnen ist die einzige
-    # Art, dieselbe Antwort zu geben wie er — eine im Dashboard gepflegte Kopie der
+    # Art, dieselbe Antwort zu geben wie er, eine im Dashboard gepflegte Kopie der
     # Zahlen waere beim naechsten Nachmessen still falsch.
     bedarf = games_blk.get("bedarf") or {}
     startend_mb = (status.get("ram") or {}).get("reserviert_startend_mb") or 0
     frei_mb = (ram_mb - startend_mb) if isinstance(ram_mb, int) else None
 
     # „Blockiert" heisst jetzt nur noch: eine reservierte Lab-Sitzung hat Vorrang.
-    # Zwischen Spielen blockiert nichts mehr — es entscheidet der freie Speicher,
+    # Zwischen Spielen blockiert nichts mehr, es entscheidet der freie Speicher,
     # und das sieht man erst beim Startversuch, nicht an der Kachel.
     holder = "__lab__" if lab_reserved else None
 
@@ -174,7 +174,7 @@ def build_view(status: dict, always_on: dict | None = None,
     order = registry + dauerlaeufer + [g for g in ("minecraft",) if g not in registry]
     a2s = always_on or {}
 
-    # Multi-Welten (arbiter emit_state): je Game {active, list} — nur Games mit
+    # Multi-Welten (arbiter emit_state): je Game {active, list}, nur Games mit
     # multi_world in der Arbiter-Registry tauchen hier auf.
     worlds_blk = games_blk.get("worlds") or {}
 
@@ -186,19 +186,19 @@ def build_view(status: dict, always_on: dict | None = None,
         if key in ALWAYS_ON:
             info = a2s.get(key)
             # "dauerhaft an" ist eine Aussage ueber die Konfiguration und stimmt immer.
-            # Fehlt die Messung (Factorio: UDP ohne Abfrage), heisst das NICHT "offline" —
+            # Fehlt die Messung (Factorio: UDP ohne Abfrage), heisst das NICHT "offline",
             # das waere eine erfundene Fehlermeldung. Es heisst nur: keine Spielerzahl.
             pruefbar = not (info or {}).get("unbekannt", False)
             state = "always_on" if info else "offline"
             players = info.get("players") if info else None
         elif not arbiter_ok:
-            # Ohne Arbiter wissen wir ueber diese Rolle nichts — nicht "schlaeft" behaupten.
+            # Ohne Arbiter wissen wir ueber diese Rolle nichts, nicht "schlaeft" behaupten.
             state, players = "unbekannt", None
         elif key in reserved_all:
             # Vom Arbiter verwaltet und reserviert -> soll laufen. „Soll" ist aber nicht
             # „ist": ein Spielserver braucht nach dem Startbefehl 1-3 Minuten (DayZ eher
             # 3), bis er Beitritte annimmt. Bis 2026-08-24 zeigte die Kachel in dieser
-            # Zeit „läuft" — wer daraufhin beitrat, lief in einen Timeout und hielt den
+            # Zeit „läuft", wer daraufhin beitrat, lief in einen Timeout und hielt den
             # Server fuer kaputt. erreichbar=False heisst genau: gefragt, noch keine
             # Antwort. Fehlt die Angabe (aeltere Arbiter-Version), bleibt es bei „läuft".
             d = detail.get(key) or {}
@@ -260,7 +260,7 @@ def build_view(status: dict, always_on: dict | None = None,
             "schwelle_mb": schwelle,
             # Reserviert = kein Auto-Off, keine Verdraengung. Die Oberflaeche braucht
             # den Zustand, um den Knopf richtig herum zu beschriften (Reservieren vs.
-            # Reservierung aufheben) — ein Schalter, der seinen Zustand nicht kennt,
+            # Reservierung aufheben), ein Schalter, der seinen Zustand nicht kennt,
             # laedt zum Doppelklick auf das Falsche ein.
             "reserviert": bool((detail.get(key) or {}).get("geschuetzt")),
             "always_on": key in ALWAYS_ON,
@@ -287,7 +287,7 @@ def build_view(status: dict, always_on: dict | None = None,
         "ram_mb": ram_mb,
         # Der Wert, gegen den die Kacheln ihre Startbarkeit rechnen. Ohne ihn zeigte
         # die Kopfzeile den ROHEN freien Speicher, waehrend die Kacheln daneben
-        # "braucht 2,4 GB frei, so viel ist es gerade nicht" schrieben — bei 5,1 GB
+        # "braucht 2,4 GB frei, so viel ist es gerade nicht" schrieben, bei 5,1 GB
         # in der Ueberschrift. Beides stimmte, aber nur eines war gemeint: ein
         # startender Server hat seinen Speicher noch nicht belegt und bekommt ihn
         # trotzdem. Zwei Zahlen, die sich auf einem Bild widersprechen, liest man

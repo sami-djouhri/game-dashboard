@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     brand_name: str = "Greenleaf"
     brand_tagline: str = "Privater Game-Cluster · Beitritt auf Bewerbung"
     # Subtiler Entwickler-Credit (Footer/About), nicht plakativ auf der Startseite.
-    # „im eigenen Homelab" stand hier bis 2026-08-27 — seit dem Umzug am 22.08. laeuft
+    # „im eigenen Homelab" stand hier bis 2026-08-27, seit dem Umzug am 22.08. laeuft
     # nichts davon mehr zu Hause. Selbst gebaut und selbst betrieben stimmt weiterhin
     # und ist ohnehin die Aussage, um die es geht.
     developer_credit: str = "Selbst gebaut & selbst betrieben."
@@ -85,7 +85,7 @@ class Settings(BaseSettings):
     # ── wake-bridge ───────────────────────────────────────────────────
     # GET /status ist token-frei; POST /wake|/sleep|/restart braucht Bearer.
     # Der Token bleibt serverseitig, er wird NIE an den Browser gegeben.
-    # Die Bridge sitzt IMMER auf dem Wirt, der die Spiele haelt — seit 2026-08-22
+    # Die Bridge sitzt IMMER auf dem Wirt, der die Spiele haelt, seit 2026-08-22
     # ist das gamehost (host-nativ neben dem Dashboard), nicht mehr Node .18.
     # Deshalb der Wirts-Default statt einer festen LAN-Adresse: .18 hat keine
     # Spielrolle mehr, und seine Bridge ist LAN-only, vom VPS aus unerreichbar.
@@ -98,7 +98,7 @@ class Settings(BaseSettings):
 
     # ── Welten-Downloads (Game-Vault) ─────────────────────────────────
     # Nur fuer admin-verifizierte Mitglieder. Ein Host-Timer packt die taeglichen
-    # Welt-Snapshots (<wirt>:/var/backups/game-saves/<game>.tar.gz) hierher — auf
+    # Welt-Snapshots (<wirt>:/var/backups/game-saves/<game>.tar.gz) hierher, auf
     # gamehost ist das welten-schnappschuss.timer (05:23), der die Spielstaende der
     # dort laufenden Server sichert und spiegelt. Die App serviert sie read-only aus
     # diesem Verzeichnis (kein SSH-Key im Container).
