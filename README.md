@@ -110,7 +110,8 @@ configuration and the address of the bridge it talks to. A script removes those,
 replaces internal addresses and paths with placeholders, and will not push unless
 two separate secret scanners come back clean.
 
-Hence the single commit instead of the actual history. The service runs on the
-same host as the things it controls, which is the arrangement that removed a
-whole tunnel and a set of forwarding rules from the picture: when the controller
-sits next to what it controls, there is no remote network path left to secure.
+Hence a public history that begins at the first release instead of the actual
+one. The service runs on the same host as the things it controls, which is the
+arrangement that removed a whole tunnel and a set of forwarding rules from the
+picture: when the controller sits next to what it controls, there is no remote
+network path left to secure.
