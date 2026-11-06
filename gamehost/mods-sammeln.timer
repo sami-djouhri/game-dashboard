@@ -1,0 +1,13 @@
+[Unit]
+Description=Mod-Listen taeglich einsammeln
+
+[Timer]
+# Nach dem Welten-Schnappschuss (04:20), damit sich die beiden nicht auf derselben
+# Platte begegnen. Mods aendern sich selten; ausserdem laeuft der Sammler bei jedem
+# Ausrollen einmal mit, damit eine frische Aenderung nicht bis zur Nacht wartet.
+OnCalendar=*-*-* 04:40:00
+RandomizedDelaySec=5m
+Persistent=yes
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Karte · {{ brand }}{% endblock %}
+
+{# Eine eigene Seite statt eines 404. „Nicht gefunden" waere hier die falsche
+   Auskunft: die Karte ist nicht weg, sie ist noch nicht gerendert, und das sind zwei
+   verschiedene Lagen. Genau dieser Unterschied war der Befund vom 2026-10-17 --
+   BlueMap lag monatelang installiert und konfiguriert da und hatte nie einen Block
+   gezeichnet, sichtbar allein als Warnung im Container-Log. #}
+{% block body %}
+<div class="wrap">
+  <div class="legal-wrap">
+    <div class="panel">
+      <h1>Karte</h1>
+      <p class="muted">Von der Minecraft-Welt liegt noch keine gerenderte Karte vor.</p>
+
+      <h4 class="legal-h">Woran es liegt</h4>
+      <p>Die Karte entsteht auf dem Spiele-Wirt, während der Server läuft, und zwar
+        Stück für Stück: beim ersten Mal muss BlueMap die Blöcke der ganzen Welt
+        einmal durchgehen. Solange noch nichts fertig ist, steht hier diese Seite
+        statt einer leeren Oberfläche.</p>
+
+      <h4 class="legal-h">Wann sie kommt</h4>
+      <p>Mit dem nächsten Start des Servers beginnt das Zeichnen. Die Karte bleibt
+        danach auch sichtbar, wenn der Server wieder schläft: was gezeichnet ist,
+        liegt als Datei und braucht den Server nicht mehr. Nur neue Bauten kommen
+        erst dazu, wenn wieder jemand spielt.</p>
+
+      <p><a class="btn ghost" href="/app">← Zu den Servern</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

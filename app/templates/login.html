@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Login · {{ brand }}{% endblock %}
+{% block body %}
+<div class="wrap">
+  <div class="auth-wrap">
+    <div class="panel">
+      <h1>Willkommen zurück</h1>
+      <p class="muted">Melde dich an, um die Server zu sehen und zu starten.</p>
+      <form method="post" action="/login">
+        <label for="u">Benutzername</label>
+        <input id="u" name="username" autocomplete="username" autofocus required>
+        <label for="p">Passwort</label>
+        <input id="p" name="password" type="password" autocomplete="current-password" required>
+        {# Die Frage gehoert nicht in den Knopf. Eine Taste traegt einen Befehl, und
+           „Noch kein Zugang? Bewerben" ist ein Satz: gesperrt in Versalien stand
+           quer unter dem Formular etwas, das aussah wie die zweite Haupthandlung.
+           Jetzt fragt der Text, und der Knopf antwortet mit einem Wort. #}
+        <div class="formbtns">
+          <button class="btn primary" type="submit">Anmelden</button>
+          <span class="hintline" style="margin:0">Noch kein Zugang?
+            <a href="/apply">Bewerben →</a></span>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

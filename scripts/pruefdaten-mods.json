@@ -1,0 +1,151 @@
+{
+ "stand": "2026-10-17T18:49:32+00:00",
+ "spiele": {
+  "terraria": {
+   "gelesen": true,
+   "quelle": "/home/terraria/Mods/enabled.json",
+   "mods": [
+    "BossChecklist",
+    "Fargowiltas",
+    "FargowiltasSouls",
+    "Luminance",
+    "MagicStorage",
+    "RecipeBrowser",
+    "SerousCommonLib",
+    "ThoriumMod"
+   ]
+  },
+  "terraria-wildwuchs": {
+   "gelesen": true,
+   "quelle": "/home/terraria/Mods/enabled.json",
+   "mods": [
+    "BossChecklist",
+    "Fargowiltas",
+    "FargowiltasSouls",
+    "Luminance",
+    "MagicStorage",
+    "RecipeBrowser",
+    "SerousCommonLib",
+    "ThoriumMod"
+   ]
+  },
+  "terraria-calamity": {
+   "gelesen": true,
+   "quelle": "/home/terraria/calamity/Mods/enabled.json",
+   "mods": [
+    "BossChecklist",
+    "CalamityMod",
+    "CalamityModMusic",
+    "MagicStorage",
+    "RecipeBrowser",
+    "SSC",
+    "SerousCommonLib"
+   ]
+  },
+  "factorio": {
+   "gelesen": true,
+   "quelle": "/home/factorio/factorio/mods/mod-list.json",
+   "mods": [
+    "Milestones",
+    "VehicleSnap",
+    "aai-containers",
+    "aai-industry",
+    "aai-signal-transmission",
+    "alien-biomes",
+    "alien-biomes-graphics",
+    "combat-mechanics-overhaul",
+    "flib",
+    "informatron",
+    "jetpack",
+    "robot_attrition",
+    "shield-projector",
+    "space-exploration",
+    "space-exploration-graphics",
+    "space-exploration-graphics-2",
+    "space-exploration-graphics-3",
+    "space-exploration-graphics-4",
+    "space-exploration-graphics-5",
+    "space-exploration-menu-simulations",
+    "space-exploration-postprocess"
+   ]
+  },
+  "zomboid": {
+   "gelesen": true,
+   "quelle": "/home/zomboid/Zomboid/Server",
+   "je_welt": true,
+   "welten": {
+    "greenleaf": [
+     "MoodleFramework",
+     "TchernoLib",
+     "twbInfirmities",
+     "SpawnSelector",
+     "ThisIsYourLife",
+     "Greenleaf B42 version",
+     "VilaZMap"
+    ]
+   },
+   "mods": [
+    "Greenleaf B42 version",
+    "MoodleFramework",
+    "SpawnSelector",
+    "TchernoLib",
+    "ThisIsYourLife",
+    "VilaZMap",
+    "twbInfirmities"
+   ]
+  },
+  "dayz": {
+   "gelesen": true,
+   "quelle": "/etc/systemd/system/dayz-server.service",
+   "mods": [
+    "CF",
+    "AgricultureCore",
+    "VPPAdminTools"
+   ]
+  },
+  "minecraft": {
+   "gelesen": true,
+   "quelle": "/opt/mc/data/plugins",
+   "mods": [
+    "Chunky-Bukkit",
+    "CrazyCrates",
+    "DecentHolograms",
+    "DeluxeMenus-1.14.1-Release",
+    "DiscordSRV-Build",
+    "GSit",
+    "GreenleafKern",
+    "GriefPrevention",
+    "IridiumSkyblock",
+    "LuckPerms-Bukkit",
+    "PlaceholderAPI",
+    "PlayerPoints",
+    "Playtime",
+    "SchachPack",
+    "SchachSpiel",
+    "SimpleFly",
+    "SimpleScore",
+    "SimpleTPA-Paper",
+    "VaultUnlocked",
+    "bluemap-5.29-paper",
+    "lucktags",
+    "multiverse-core",
+    "multiverse-netherportals",
+    "multiverse-portals",
+    "vrx-jobsystem",
+    "worldedit-bukkit",
+    "zHomes"
+   ],
+   "serverseitig": true
+  },
+  "valheim": {
+   "gelesen": true,
+   "quelle": "/home/valheim",
+   "mods": []
+  },
+  "avorion": {
+   "gelesen": true,
+   "quelle": "/home/avorion/.avorion/galaxies",
+   "mods": []
+  }
+ }
+}

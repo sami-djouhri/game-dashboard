@@ -1,0 +1,7 @@
+{# Unsichtbarer Vorrat der SVG-Szenen: app.js klont sie beim Kartenbau per
+   document.getElementById('scene-<key>'). Fallback fuer unkuratierte Games. #}
+{% import "_scenes.html" as sc %}
+<div hidden aria-hidden="true">
+  {% for k in scene_keys %}<template id="scene-{{ k }}">{{ sc.scene(k) }}</template>{% endfor %}
+  <template id="scene-fallback">{{ sc.scene('fallback') }}</template>
+</div>

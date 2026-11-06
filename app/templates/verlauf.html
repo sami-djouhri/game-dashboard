@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Verlauf · {{ brand }}{% endblock %}
+{% block nav_admin %}here{% endblock %}
+{% block body %}
+{# Die Seite beantwortet zwei Fragen, die bisher keine Oberflaeche hatte:
+   „wer hat wann welchen Server gestartet" (der Verlauf war auf 30 Zeilen ohne
+   Filter beschraenkt) und „wie ausgelastet sind die Server eigentlich" (die
+   Spielzeiten lagen in play_sessions, sichtbar war nur eine Stundensumme).
+   Die Auslastung steht oben, weil sie die Frage ist, die man regelmaessig
+   stellt; der Verlauf darunter ist die, die man im Einzelfall stellt. #}
+<div class="wrap">
+
+  <section class="section" style="padding-top:24px">
+    <div class="section-title">
+      <h2>Auslastung</h2>
+      <span class="hint">{% if filter.zeitraum == 'alle' %}gesamter Zeitraum{% else %}letzte {{ filter.zeitraum }} Tage{% endif %} · zurück zum <a href="/admin">Admin</a></span>
+    </div>
+    <div class="panel" style="padding:6px 14px">
+      <table class="tbl stapel">
+        <thead>
+          <tr><th>Spiel</th><th>Läufe</th><th>Laufzeit</th><th>Spielerstunden</th>
+              <th>Spitze</th><th>ungenutzt</th></tr>
+        </thead>
+        <tbody>
+        {% for n in nutzung %}
+          <tr>
+            <td><span class="dot" style="background:{{ n.color }}"></span> {{ n.label }}</td>
+            <td class="mono" data-label="Läufe">{{ n.laeufe }}</td>
+            <td class="mono" data-label="Laufzeit">{{ n.stunden_h }}</td>
+            {# Spielerstunden gegen Laufzeit: der Unterschied ist die Zeit, in der ein
+               Server Speicher belegte, ohne dass jemand darauf war. #}
+            <td class="mono" data-label="Spielerstunden">{{ n.spielerstunden }} h</td>
+            <td class="mono" data-label="Spitze">{{ n.spitze }}</td>
+            <td class="mono" data-label="ungenutzt">{% if n.leerlaeufe %}<span class="tag">{{ n.leerlaeufe }}× ohne Spieler</span>{% else %}–{% endif %}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" style="color:var(--dim);padding:16px">Für diesen Zeitraum ist nichts gelaufen.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:10px">
+    <div class="section-title"><h2>Wer weckt</h2><span class="hint">Starts über diese Seite; Weckrufe aus Discord zählen hier nicht mit</span></div>
+    <div class="panel" style="padding:6px 14px">
+      <table class="tbl stapel">
+        <thead><tr><th>Person</th><th>Starts</th><th>Spiele</th><th>zuletzt</th></tr></thead>
+        <tbody>
+        {% for s in starter %}
+          <tr><td>{{ s.actor }}</td>
+              <td class="mono" data-label="Starts">{{ s.starts }}</td>
+              <td class="mono" data-label="Spiele">{{ s.spiele }}</td>
+              <td class="mono" data-label="zuletzt">{{ s.zuletzt[:16].replace('T',' ') }}</td></tr>
+        {% else %}
+          <tr><td colspan="4" style="color:var(--dim);padding:16px">Noch keine Starts in diesem Zeitraum.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:10px;padding-bottom:40px">
+    <div class="section-title">
+      <h2>Verlauf</h2>
+      <span class="hint">Aufbewahrung {{ aufbewahrung }} Tage</span>
+    </div>
+
+    <div class="panel" style="padding:14px">
+      <form method="get" action="/admin/verlauf" class="filterzeile"
+            style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <label>Person<br>
+          <select name="actor">
+            <option value="">alle</option>
+            {% for p in personen %}
+              <option value="{{ p }}" {% if p == filter.actor %}selected{% endif %}>{{ p }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Art<br>
+          <select name="art">
+            <option value="">alle</option>
+            {% for a in arten %}
+              <option value="{{ a }}" {% if a == filter.art %}selected{% endif %}>{{ a }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Zeitraum<br>
+          <select name="zeitraum">
+            {% for z in zeitraeume %}
+              <option value="{{ z }}" {% if z == filter.zeitraum %}selected{% endif %}>{{ z }}{% if z != 'alle' %} Tage{% endif %}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Suche<br>
+          <input type="search" name="suche" value="{{ filter.suche }}" placeholder="Spiel, Welt, Text">
+        </label>
+        <button class="btn primary tiny" type="submit">Filtern</button>
+        <a class="btn ghost tiny" href="/admin/verlauf">Zurücksetzen</a>
+      </form>
+    </div>
+
+    <div class="panel" style="padding:6px 14px;margin-top:12px">
+      <table class="tbl stapel">
+        <tbody>
+        {% for e in eintraege %}
+          <tr><td class="mono zeit">{{ e.ts[:16].replace('T',' ') }}</td>
+              <td data-label="Person">{{ e.actor }}</td>
+              <td data-label="Art"><span class="tag">{{ e.action }}</span></td>
+              <td class="mono" data-label="Detail">{{ e.detail }}</td></tr>
+        {% else %}
+          <tr><td style="color:var(--dim);padding:16px">Nichts gefunden. Filter weiter fassen?</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% if eintraege|length >= 300 %}
+        {# Ehrlich sagen, dass abgeschnitten wurde. Eine stille Obergrenze liest sich
+           wie „mehr gibt es nicht" und ist damit eine falsche Antwort. #}
+        <p class="hint" style="padding:8px 0">Nur die neuesten 300 Zeilen. Zeitraum oder Filter enger setzen, um ältere zu sehen.</p>
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}

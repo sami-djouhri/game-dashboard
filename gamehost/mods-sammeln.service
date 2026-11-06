@@ -1,0 +1,19 @@
+[Unit]
+Description=Mod-Listen der Spielserver fuer die Clan-Seite einsammeln
+Documentation=https://games.saganta.de
+# Erst wenn die Platte da ist; die Quellen liegen in /home und /opt.
+After=local-fs.target
+
+[Service]
+Type=oneshot
+# Liest ausschliesslich: vier Konfigurationsdateien der Spiele und zwei Ordner.
+# Schreibt ausschliesslich nach /opt/game-dashboard/mods.
+ExecStart=/usr/bin/python3 /opt/game-dashboard/mods-sammeln.py /opt/game-dashboard/mods
+Nice=10
+# Ein Sammellauf darf den Wirt nicht bremsen, waehrend jemand spielt.
+IOSchedulingClass=idle
+ProtectSystem=strict
+ReadWritePaths=/opt/game-dashboard/mods
+ProtectHome=read-only
+PrivateTmp=yes
+NoNewPrivileges=yes
