@@ -4,6 +4,6 @@ pydantic==2.13.5
 pydantic-settings==2.15.0
 httpx==0.28.1
 jinja2==3.1.6
-python-multipart==0.0.32
+python-multipart==0.0.33
 argon2-cffi==25.1.0
 certifi>=2026.10.18  # GHSA-6q48-6c7w-9gw2 (emSign-Wurzeln), kommt sonst nur indirekt ueber httpx
