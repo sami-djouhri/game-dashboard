@@ -1,0 +1,22 @@
+# Wiederholte Scanner-Proben auf das Dashboard sperren (nur 80/443).
+#
+# Drei Proben in zehn Minuten reichen: ein Mensch ruft keine .env auf, und die
+# Scanner hier arbeiten in Durchlaeufen von hundert und mehr Pfaden. Die
+# Sperrzeit steigt ueber 10-wiederholungstaeter.local (Faktor 2 bis 4 Wochen),
+# und recidive sperrt nach drei Sperren am Tag alle Ports.
+#
+# Bewusst nur 80/443 in dieser Stufe: die Spielports bleiben offen, falls je
+#   eine geteilte Adresse (Mobilfunk-NAT) einen Spieler mit einem Scanner teilt.
+
+[caddy-proben]
+enabled  = true
+backend  = polling
+logpath  = /var/log/caddy/games.saganta.de.log
+filter   = caddy-proben
+port     = http,https
+maxretry = 3
+findtime = 10m
+bantime  = 1d
+# Eigene Prueferwege: netcup-sentinel (Gatus) fragt nur /, aber falls je ein
+# Pruefer eine Probe-URL abfragt, darf er sich nicht selbst aussperren.
+ignoreip = 127.0.0.1/8 ::1 192.0.2.10

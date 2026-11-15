@@ -501,6 +501,30 @@ function card(g) {
 const frischGestartet = new Map();
 const ANLAUF_MS = 90000;
 
+// Bescheid, sobald ein selbst gestarteter Server joinbar ist (Entscheidung in
+// bescheid.js). Gewartet wird hoechstens bis kurz nach dem Startfenster des Servers
+// (6 min, danach heisst er dort "antwortet nicht"); bis dahin fragt tick() auch im
+// Hintergrund-Tab, danach gilt wieder die Hintergrund-Ruhe.
+const wartetAuf = new Map();
+const BESCHEID_MAX_MS = 8 * 60 * 1000;
+const TITEL = document.title;
+
+function bescheidGeben(games) {
+  for (const m of bescheidAuswerten(wartetAuf, games, Date.now(), BESCHEID_MAX_MS)) {
+    const titel = m.bereit ? `${m.name} ist bereit` : `${m.name} antwortet nicht`;
+    const text = m.bereit ? "Der Beitritt klappt jetzt."
+                          : "Gestartet, aber nicht erreichbar. Bitte einem Admin sagen.";
+    toast(`${titel}. ${text}`, m.bereit ? "ok" : "warn", 15000);
+    // Der Tab-Titel ist der Weg, der ohne jede Erlaubnis funktioniert.
+    if (document.hidden) document.title = `${m.bereit ? "●" : "!"} ${titel} · ${TITEL}`;
+    // Android-Chrome wirft beim Konstruktor (dort nur ueber einen Service Worker),
+    // dann bleiben Titel und Toast.
+    if ("Notification" in window && Notification.permission === "granted") {
+      try { new Notification(titel, { body: text, tag: "greenleaf-" + m.key }); } catch (_) { /* s.o. */ }
+    }
+  }
+}
+
 // Solange alle Karten zu sind, ist der Hoehenausgleich einer Gitterreihe klein und
 // bringt die Knopfleisten auf eine Linie (das war der Gewinn). Klappt aber EINE Karte
 // ein Panel auf, waechst sie um mehrere hundert Pixel, und die Nachbarn ziehen mit:
@@ -920,6 +944,12 @@ async function doAction(act, game, weltVorgabe = "") {
   if (act === "switch" && world && world === (gameInfo[game] || {}).world) {
     toast(`${capWorld(world)} läuft bereits.`, "warn"); return;
   }
+  // Die Erlaubnis jetzt erfragen, nicht nach dem Startaufruf: der kann Minuten dauern,
+  // und danach zaehlt der Klick fuer den Browser nicht mehr als Nutzergeste.
+  if ((act === "start" || act === "switch" || act === "restart")
+      && "Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission().catch(() => {});
+  }
   busy.add(game); markBusy();
   // Nur die Knoepfe dieser Karte sperren, die anderen Karten bleiben bedienbar.
   const eigene = $("grid").querySelector(`.card[data-game="${game}"]`);
@@ -935,7 +965,9 @@ async function doAction(act, game, weltVorgabe = "") {
       // Unterschied zwischen "fertig" und "gleich", die Kachel zeigt danach "startet …".
       if (act === "start" || act === "switch" || act === "restart") {
         frischGestartet.set(game, Date.now());
-        toast(`${game}: ${res.message || "gestartet"}. Er braucht jetzt 1–3 Minuten, bis der Beitritt klappt.`);
+        wartetAuf.set(game, { seit: Date.now(), gesehen: act === "start" });
+        toast(`${game}: ${res.message || "gestartet"}. Er braucht jetzt 1–3 Minuten, bis der Beitritt klappt. `
+            + "Du bekommst Bescheid, die Seite darf dafür im Hintergrund liegen.");
       } else {
         frischGestartet.delete(game);   // Stopp/Reservierung: kein Anlauf zu ueberbruecken
         toast(`${game}: ${res.message || "fertig"}`);
@@ -1000,6 +1032,7 @@ async function refresh() {
       ? `${s.holder_label} ist im Wartungsmodus reserviert und hat Vorrang. Spielserver starten erst wieder, wenn die Reservierung fällt.`
       : "";
 
+    if (wartetAuf.size) bescheidGeben(s.games || []);
     const grid = $("grid");
     grid.innerHTML = "";
     (s.games || []).forEach(g => grid.appendChild(card(g)));
@@ -1023,7 +1056,7 @@ async function refresh() {
 // Uhr 17.000 Statusabfragen am Tag je Tab: jede eine Runde durch Bridge und Arbiter.
 // Beim Zurueckkehren wird sofort aktualisiert, damit man nie einen alten Stand sieht.
 async function tick() {
-  if (!document.hidden && busy.size === 0) await refresh();
+  if ((!document.hidden || wartetAuf.size) && busy.size === 0) await refresh();
   setTimeout(tick, POLL_MS);
 }
 (async function () {
@@ -1035,7 +1068,9 @@ async function tick() {
     const w = ev.target.closest("button[data-worldact]");
     if (w && !w.disabled) worldAction(w.dataset.worldact, w.dataset.game, w.dataset.world || "");
   });
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) { document.title = TITEL; refresh(); }
+  });
   await refresh();
   setTimeout(tick, POLL_MS);
 })();

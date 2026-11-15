@@ -12,6 +12,7 @@ Live-Steuerung der on-demand Game-Server und Welten-Downloads fuer verifizierte
 Mitglieder. Der Bridge-Bearer-Token bleibt serverseitig.
 """
 import asyncio
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -30,13 +31,6 @@ configure_logging(settings.log_level)
 log = get_logger(__name__)
 
 STATIC_DIR = Path(__file__).parent / "static"
-
-app = FastAPI(
-    title=settings.service_name,
-    version=settings.service_version,
-    docs_url=None, redoc_url=None, openapi_url=None,  # oeffentlich -> keine API-Docs
-)
-
 
 def _bootstrap_owner() -> None:
     """Auf leerer DB genau einen Owner anlegen. Passwort aus .env (owner_password)
@@ -161,8 +155,9 @@ async def _activity_sampler() -> None:
         await asyncio.sleep(interval)
 
 
-@app.on_event("startup")
-async def _startup() -> None:
+# Lifespan statt @app.on_event("startup"): Starlette 1.x kennt on_event nicht mehr.
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
     db.init_db()
     db.purge_expired_sessions()
     db.close_stale_play_sessions()
@@ -173,6 +168,15 @@ async def _startup() -> None:
     app.state.activity = asyncio.create_task(_activity_sampler())
     log.info("startup", brand=settings.brand_name, version=settings.service_version,
              downloads=settings.downloads_enabled)
+    yield
+
+
+app = FastAPI(
+    title=settings.service_name,
+    version=settings.service_version,
+    docs_url=None, redoc_url=None, openapi_url=None,  # oeffentlich -> keine API-Docs
+    lifespan=_lifespan,
+)
 
 
 @app.get("/health")

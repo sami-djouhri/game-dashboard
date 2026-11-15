@@ -53,7 +53,7 @@ def render(request: Request, name: str, principal: Optional[Principal] = None,
         "scene_keys": list(GUIDES.keys()),
     }
     base.update(ctx)
-    return templates.TemplateResponse(name, base, status_code=status_code)
+    return templates.TemplateResponse(request, name, base, status_code=status_code)
 
 
 def redirect(url: str, msg: str = "", err: str = "") -> RedirectResponse:

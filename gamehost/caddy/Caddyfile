@@ -1,0 +1,84 @@
+# security.txt (RFC 9116) — eine Datei, in jeden Site-Block per "import sectxt".
+(sectxt) {
+	handle /.well-known/security.txt {
+		root * /var/www/wellknown
+		rewrite * /security.txt
+		file_server
+		header Content-Type "text/plain; charset=utf-8"
+	}
+}
+
+# gamehost - oeffentlicher Eingang. Nur das Dashboard ist von aussen erreichbar;
+# die Spielserver haben ihre eigenen Ports und laufen nicht ueber Caddy.
+games.saganta.de {
+
+	import sectxt
+	encode zstd gzip
+
+	# Die drei statischen Dateien kamen ohne jeden Cache-Header. Ein ETag ist da,
+	# aber ohne Cache-Control fragt der Browser bei jedem Aufruf trotzdem nach.
+	# Eine Stunde und kein immutable: die Namen tragen keinen Hash, nach einem
+	# Deploy soll die neue Fassung zeitnah ankommen. Das ETag macht die Rueckfrage
+	# danach billig (304 statt vollem Download).
+	@statisch path /static/*
+	header @statisch Cache-Control "public, max-age=3600"
+
+	header {
+		# Die Anmeldung darf nie wieder ueber http laufen - das Sitzungs-Cookie
+		# des Dashboards ist "secure" und wuerde sonst gar nicht erst gesendet.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# Die Gaming-Rollen-Automatik erreicht der Bot ueber den SSH-Tunnel
+	# direkt auf 8144. Von aussen hat der Pfad nichts zu suchen - 404
+	# statt 401, damit er sich nicht einmal bestaetigen laesst.
+	@interna path /api/gaming/*
+	respond @interna 404
+
+	# Scanner-Proben (2026-11-14): rund 1900 Anfragen in einer Woche nach .env,
+	# .git, Zugangsdateien, Dumps und PHP, von einer Handvoll Adressen in
+	# vollstaendigen Durchlaeufen. Keine davon kann je etwas finden, aber jede lief
+	# bis in die App und fuellte deren Log, in dem die rund hundert echten Aufrufe
+	# der Woche untergingen. Caddy antwortet jetzt selbst mit 404.
+	# fail2ban (Jail caddy-proben) liest dieselben Muster aus dem Zugriffslog und
+	# sperrt wiederholte Prober fuer Port 80/443.
+	# Das Muster steht ein zweites Mal in gamehost/fail2ban/filter.d/caddy-proben.conf.
+	#   Wer es hier aendert, aendert es dort mit (RE2 hier, Python dort, darum kein
+	#   Lookahead: die Ausnahmen stehen als `not path`).
+	# /packs/ liefert echte .zip-Dateien (Minecraft-Ressourcenpaket), /.well-known/
+	#   traegt security.txt und die ACME-Pruefung: beide nie als Probe werten.
+	@proben {
+		not path /.well-known/* /packs/*
+		path_regexp proben (?i)(^/\.|/\.(env|git|svn|hg|aws|ssh|docker)|\.(php\d?|phtml|asp|aspx|jsp|cgi|sql|bak|old|orig|save|swp|ini|cnf|env|axd|7z|rar|tar|gz|tgz|bz2|zip)$|^/(wp-|wordpress|phpmyadmin|pma|actuator|telescope|server-status|cgi-bin|vendor/|_vti_|elmah))
+	}
+	respond @proben 404 {
+		close
+	}
+
+	# Das Ressourcenpaket der Schach-Welt (Minecraft). Es muss oeffentlich liegen,
+	# weil der SPIELER es laedt und nicht der Server: eine LAN-Adresse waere wertlos.
+	# Inhalt sind ausschliesslich Modelle der Schachfiguren, keine Daten.
+	# `handle_path` statt `handle`, damit das Praefix wegfaellt und die Datei
+	# direkt unter /var/www/packs liegen kann.
+	# Ein Tag Cache mit ETag: der Client prueft ohnehin den SHA-1 des Pakets und
+	# laedt bei einer Aenderung neu, weil sich dann der Hash in der Plugin-
+	# Konfiguration mitaendert.
+	handle_path /packs/* {
+		root * /var/www/packs
+		file_server
+		header Cache-Control "public, max-age=86400"
+	}
+
+	reverse_proxy 127.0.0.1:8144
+
+	log {
+		output file /var/log/caddy/games.saganta.de.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}
