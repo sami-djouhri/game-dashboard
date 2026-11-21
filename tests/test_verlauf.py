@@ -202,3 +202,16 @@ def test_verlauf_bleibt_ohne_bridge_lesbar(monkeypatch):
 
     antwort = s.get("/api/games/valheim/verlauf")
     assert antwort.status_code == 200
+
+
+def test_platzhalter_aus_der_eingabe_bleiben_zeichen():
+    """`_` und `%` im Spielnamen oder in der Suche sind Zeichen, keine LIKE-Platzhalter."""
+    from app import db
+    db._exec("INSERT INTO events(ts,actor,action,detail,game) VALUES(?,?,?,?,'')",
+             (db.now_iso(), "sami", "game.start", "terraria welt=greenleaf -> ok"))
+    db.log_event("sami", "snapshot.create", "valheim welt_2 gesichert", game="valheim")
+
+    assert db.events_fuer_spiel("ter_aria") == []
+    assert [z["detail"] for z in db.events_filtern(suche="_")] == ["valheim welt_2 gesichert"]
+    assert db.events_filtern(suche="%") == []
+    assert db.events_filtern(action="g_me") == []

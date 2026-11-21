@@ -14,7 +14,7 @@ login-Ereignisse, das im Admin-Verlauf sichtbar ist.
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 from pathlib import Path
 from threading import Lock
 from typing import Optional
@@ -47,7 +47,7 @@ def now_iso() -> str:
 _ANZEIGE_ZONE_NAME = "Europe/Berlin"
 
 
-def _anzeige_zone() -> timezone | "ZoneInfo":
+def _anzeige_zone() -> tzinfo:
     """Die Ortszeit, oder UTC, wenn die Zeitzonendatenbank fehlt.
 
     ⚠️ Bewusst ein Rueckfall statt einer Ausnahme: eine fehlende tzdata wuerde
@@ -658,6 +658,11 @@ def log_event(actor: str, action: str, detail: str = "", game: str = "") -> None
         pass
 
 
+def _wie(text: str) -> str:
+    """`%` und `_` als Zeichen, nicht als LIKE-Platzhalter; braucht `ESCAPE '\\'`."""
+    return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def _spiel_bedingung(game: str) -> tuple[str, tuple]:
     """SQL-Bedingung „dieses Ereignis gehoert zu diesem Spiel".
 
@@ -669,8 +674,9 @@ def _spiel_bedingung(game: str) -> tuple[str, tuple]:
     aktionen („terraria welt=solo -> ok") und ein Schraegstrich beim
     Welten-Download („terraria/solo").
     """
-    return ("(game = ? OR (game = '' AND (detail = ? OR detail LIKE ? OR detail LIKE ?)))",
-            (game, game, f"{game} %", f"{game}/%"))
+    return ("(game = ? OR (game = '' AND (detail = ? OR detail LIKE ? ESCAPE '\\'"
+            " OR detail LIKE ? ESCAPE '\\')))",
+            (game, game, f"{_wie(game)} %", f"{_wie(game)}/%"))
 
 
 def events_fuer_spiel(game: str, limit: int = 25) -> list[sqlite3.Row]:
@@ -701,10 +707,10 @@ def events_filtern(actor: str = "", action: str = "", suche: str = "",
         wo.append("actor = ? COLLATE NOCASE"); p.append(actor)
     if action:
         # Praefix-Suche, damit 'game' alle game.* trifft und 'game.start' nur diese.
-        wo.append("(action = ? OR action LIKE ?)"); p += [action, action + ".%"]
+        wo.append("(action = ? OR action LIKE ? ESCAPE '\\')"); p += [action, _wie(action) + ".%"]
     if suche:
-        wo.append("(detail LIKE ? OR action LIKE ? OR actor LIKE ?)")
-        p += [f"%{suche}%"] * 3
+        wo.append("(detail LIKE ? ESCAPE '\\' OR action LIKE ? ESCAPE '\\' OR actor LIKE ? ESCAPE '\\')")
+        p += [f"%{_wie(suche)}%"] * 3
     if tage:
         wo.append("ts >= ?"); p.append(iso(now_utc() - timedelta(days=tage)))
     sql = "SELECT * FROM events"
