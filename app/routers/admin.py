@@ -5,12 +5,13 @@ Alle Aktionen sind Form-POSTs mit Session-CSRF und enden in Post/Redirect/Get.
 """
 from __future__ import annotations
 
-from datetime import timedelta
+import re
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
 
-from app import db
+from app import bridge, db
 from app.auth import Principal, check_csrf, current_user, require_admin, require_owner
 from app.config import settings
 from app.db import iso, now_utc
@@ -100,6 +101,67 @@ def _nutzungs_zeilen(tage):
             "leerlaeufe": r["leerlaeufe"],
         })
     return zeilen
+
+
+# ── Server-Updates (2026-11-22) ───────────────────────────────────────
+# Bis hierhin kannte nur ntfy den Befund des game-version-watchers, eingespielt wurde
+# per ssh. Die Seite zeigt je Spiel, ob der Server zurueckliegt, und dem Owner einen
+# Knopf, der dasselbe Werkzeug mit denselben Schutzschritten startet. Eigene Seite statt
+# Abschnitt auf /admin: dort stehen die Menschen, die Maschinen stehen auf /app.
+_SPIEL_RE = re.compile(r"^[a-z0-9-]{2,30}$")
+
+
+def _zeit(ts) -> str:
+    if not ts:
+        return ""
+    try:
+        return datetime.fromtimestamp(float(ts), db._anzeige_zone()).strftime("%d.%m. %H:%M")
+    except (TypeError, ValueError, OSError):
+        return ""
+
+
+def _update_zeilen(daten: dict) -> list[dict]:
+    zeilen = []
+    for s in daten.get("spiele") or []:
+        meta = GAME_META.get(s["name"]) or {}
+        lauf = s.get("update") or None
+        if lauf:
+            lauf = dict(lauf, start_h=_zeit(lauf.get("start")), ende_h=_zeit(lauf.get("ende")))
+        zeilen.append(dict(s, label=meta.get("label", s["name"].capitalize()),
+                           color=meta.get("color", FALLBACK_COLOR), lauf=lauf))
+    # Veraltete zuerst: die Seite wird aufgerufen, um genau diese zu finden.
+    zeilen.sort(key=lambda z: (z.get("hinterher") is not True, z["label"]))
+    return zeilen
+
+
+@router.get("/updates", response_class=HTMLResponse)
+async def updates(request: Request, principal: Principal = Depends(current_user)):
+    if not principal.is_admin:
+        return redirect("/app", err="Kein Admin-Zugang.")
+    fehler = ""
+    try:
+        daten = await bridge.get_updates()
+    except Exception as exc:  # Bridge weg oder alt: Seite zeigt das, statt zu kippen
+        daten, fehler = {}, f"Stand nicht abrufbar ({type(exc).__name__})."
+    zeilen = _update_zeilen(daten)
+    gemessen = daten.get("gemessen") or ""
+    return render(request, "updates.html", principal, zeilen=zeilen, fehler=fehler,
+                  gemessen=gemessen[:16].replace("T", " "),
+                  laeuft=any(z["lauf"] and z["lauf"].get("laeuft") for z in zeilen))
+
+
+@router.post("/updates/{game}")
+async def update_starten(game: str, request: Request,
+                         principal: Principal = Depends(require_owner),
+                         csrf: str = Form("")):
+    check_csrf(request, principal, csrf)
+    if not _SPIEL_RE.match(game):
+        return redirect("/admin/updates", err="Unbekanntes Spiel.")
+    outcome, meldung = await bridge.start_update(game, wer=principal.username)
+    db.log_event(principal.username, "game.update", f"{game}: {outcome}")
+    if outcome == "ok":
+        return redirect("/admin/updates", msg=meldung)
+    return redirect("/admin/updates", err=meldung)
 
 
 # ── Bewerbungen ───────────────────────────────────────────────────────

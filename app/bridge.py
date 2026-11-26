@@ -351,6 +351,52 @@ async def delete_world(game: str, world_id: str, wer: str | None = None) -> tupl
                                     owner=True, wer=wer)
 
 
+async def get_updates() -> dict:
+    """Update-Lage je Spiel (GET /updates der Bridge, token-frei). Wirft httpx-Fehler.
+
+    Ruft auf dem Wirt `spiel-aktualisieren --nur-pruefen --json` und liest die Messung
+    des game-version-watchers; beides nur Dateien, aber nicht so schnell wie /status."""
+    url = f"{settings.game_bridge_url}/updates"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.get(url)
+        resp.raise_for_status()
+        return resp.json()
+
+
+async def start_update(game: str, wer: str | None = None) -> tuple[str, str]:
+    """Update auf dem Wirt starten, IMMER mit dem Owner-Token: die Bridge nimmt es mit
+    dem normalen Token nicht an. Kehrt sofort zurueck, das Update laeuft dort weiter.
+
+    Rueckgabe (outcome, Meldung), outcome in {ok, blocked, error}."""
+    headers = _kopf(owner=True, wer=wer)
+    if headers is None:
+        return "error", "Kein Owner-Token für die Bridge hinterlegt, Updates sind deaktiviert."
+    url = f"{settings.game_bridge_url}/update/{game}"
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(url, headers=headers)
+    except httpx.HTTPError as exc:
+        log.warning("bridge.unreachable", url=url, error=str(exc))
+        return "error", f"wake-bridge nicht erreichbar: {exc}"
+    try:
+        data = resp.json()
+    except ValueError:
+        data = {}
+    if resp.status_code == 202:
+        return "ok", ("Update gestartet. Spielt gerade jemand, bricht es ohne Änderung ab. "
+                      "Sonst: Wartung, Sicherung, Einspielen, Probestart. Den Stand zeigt "
+                      "diese Seite.")
+    if resp.status_code == 409:
+        if data.get("error") == "laeuft bereits":
+            return "blocked", "Für dieses Spiel läuft schon ein Update."
+        return "blocked", ("Kein automatischer Update-Weg. " + str(data.get("hinweis") or "")).strip()
+    if resp.status_code == 403:
+        return "blocked", "Das darf nur der Owner."
+    if resp.status_code == 401:
+        return "error", "Owner-Token abgelehnt (401)."
+    return "error", f"Unerwartete Antwort ({resp.status_code}). {data.get("error", "")}".strip()
+
+
 def _tail_log(data: dict) -> str:
     log_lines = data.get("log") or []
     lines = [str(x) for x in log_lines[-4:] if str(x).strip()]

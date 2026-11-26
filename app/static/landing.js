@@ -5,6 +5,28 @@ const STATE = { active: "läuft", sleeping: "bereit", blocked: "belegt",
                 always_on: "läuft", offline: "keine Antwort",
                 unbekannt: "unbekannt" };
 
+// Die Zeile ueber den Knoepfen: wer spielt wo, oder was laeuft leer.
+// Aus der Kachelliste, nicht aus `active_label`. Das Feld nennt nur das ERSTE
+// laufende Spiel, und bis 2026-11-26 stand hier bei zwei belegten Servern
+// "5 Personen spielen gerade · Valheim", obwohl 2 davon auf GreenForest waren.
+// Leerer Text heisst: nichts wach, der Aufrufer zeigt dann den Ruhesatz.
+const _esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function laufzeile(s) {
+  const wach = (s.games || []).filter((g) => g.state === "active" || g.state === "always_on");
+  const besetzt = wach.filter((g) => (g.players || 0) > 0)
+    .sort((a, b) => (b.players || 0) - (a.players || 0));
+  const gesamt = s.online_total || 0;
+  if (gesamt > 0) {
+    const wo = besetzt.map((g) => _esc(g.label)).join(", ");
+    return `<b>${gesamt}</b> ${gesamt === 1 ? "Person spielt" : "Personen spielen"} gerade${wo ? " · " + wo : ""}`;
+  }
+  if (wach.length) {
+    const namen = wach.map((g) => _esc(g.label)).join(", ");
+    return `${namen} ${wach.length === 1 ? "läuft" : "laufen"}`;
+  }
+  return "";
+}
+
 async function pulse() {
   let s;
   try { s = await (await fetch("/api/public/status", { headers: { Accept: "application/json" } })).json(); }
@@ -52,12 +74,9 @@ async function pulse() {
     if (s.arbiter_ok === false) {
       dot.className = "dot"; hl.classList.remove("on");
       txt.textContent = "Serverstatus gerade nicht abrufbar, ein Beitritt kann fehlschlagen";
-    } else if (s.online_total > 0) {
+    } else if (laufzeile(s)) {
       dot.className = "dot live"; hl.classList.add("on");
-      txt.innerHTML = `<b>${s.online_total}</b> ${s.online_total === 1 ? "Person spielt" : "Personen spielen"} gerade${s.active_label ? " · " + s.active_label : ""}`;
-    } else if (s.active_label) {
-      dot.className = "dot live"; hl.classList.add("on");
-      txt.innerHTML = `${s.active_label} läuft`;
+      txt.innerHTML = laufzeile(s);
     } else {
       dot.className = "dot"; hl.classList.remove("on");
       txt.textContent = "gerade ruhig, jederzeit weckbar";
@@ -88,6 +107,10 @@ function starteTakt() {
   if (takt) clearInterval(takt);
   takt = setInterval(() => { if (!document.hidden) pulse(); }, 15000);
 }
-document.addEventListener("visibilitychange", () => { if (!document.hidden) { pulse(); starteTakt(); } });
-pulse();
-starteTakt();
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { pulse(); starteTakt(); } });
+  pulse();
+  starteTakt();
+}
+
+if (typeof module !== "undefined") module.exports = { laufzeile };

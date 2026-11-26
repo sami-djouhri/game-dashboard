@@ -10,8 +10,14 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 
 from app import bridge, db, games, vault
-from app.auth import (Principal, check_csrf, current_user, optional_user,
-                      require_admin, require_owner, require_verified)
+from app.auth import (
+    Principal,
+    check_csrf,
+    current_user,
+    require_admin,
+    require_owner,
+    require_verified,
+)
 from app.config import settings
 from app.logging_config import get_logger
 from app.security import rate

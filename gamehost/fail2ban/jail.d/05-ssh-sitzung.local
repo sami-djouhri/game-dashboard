@@ -1,0 +1,14 @@
+# Wer gerade per SSH ANGEMELDET ist, wird von keinem Jail gesperrt.
+#
+# Gemeint ist der Heimanschluss: seine Adresse wechselt, von ihr haelt node1
+# aber dauerhaft den Bridge-Tunnel. Ein fester ignoreip-Eintrag veraltete still.
+# Am 2026-11-23 sperrte caddy-proben den eigenen Anschluss fuer 18 h (eine
+# Sicherheitsprobe aus dem Haus), und recidive zaehlte mit: drei Sperren am Tag
+# haetten alle Ports gesperrt und damit den Tunnel selbst getrennt.
+#
+# Ein blosser TCP-Connect auf Port 22 reicht nicht, die Pruefung verlangt eine
+#   abgeschlossene Anmeldung (Begruendung im Skript). Gilt fuer alle Jails, die
+#   ignorecommand nicht selbst setzen; ignoreip je Jail bleibt daneben bestehen.
+
+[DEFAULT]
+ignorecommand = /usr/local/sbin/f2b-ssh-sitzung <ip>

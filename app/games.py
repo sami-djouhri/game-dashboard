@@ -78,11 +78,6 @@ def host_of(game: str) -> str:
     return SERVER.get(ep[0], "") if ep else ""
 
 
-def port_of(game: str) -> int | None:
-    ep = ENDPOINTS.get(game)
-    return ep[1] if ep else None
-
-
 def address(game: str) -> str:
     """Die Adresse, die jemand in seinen Client tippt. Leer, wenn es keine gibt.
 

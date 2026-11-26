@@ -215,10 +215,16 @@ async def ruecknahme(request: Request, authorization: str | None = Header(defaul
 
     Nur Konten der Automatik, die sich noch nie angemeldet haben. Sonst wuerde
     ein einzelner Zustellfehler ein benutztes Konto mitreissen.
+
+    `merken: false` (seit 2026-11-26): das Konto kommt weg, die Person aber NICHT
+    auf die Ausnahmeliste. Fuer einen voruebergehenden Fehler (Discord 5xx, Netz):
+    der naechste Abgleich legt ein frisches Konto an und versucht die DM erneut.
+    Ohne das Feld bleibt es beim alten Verhalten, ein aelterer Bot merkt also weiter.
     """
     _pruefe_token(authorization)
     daten = await request.json()
     grund = str(daten.get("grund") or "DM nicht zustellbar")[:120]
+    merken = daten.get("merken", True) is not False
     entfernt = []
     for did in daten.get("discord_ids") or []:
         konto = db.get_user_by_discord(str(did))
@@ -232,5 +238,6 @@ async def ruecknahme(request: Request, authorization: str | None = Header(defaul
         else:
             name = str(did)
         # Merken, damit der naechste Durchgang nicht dasselbe noch einmal tut.
-        db.ausnahme_setzen(str(did), name, grund)
+        if merken:
+            db.ausnahme_setzen(str(did), name, grund)
     return {"ok": True, "entfernt": entfernt}

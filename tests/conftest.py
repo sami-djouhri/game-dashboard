@@ -68,6 +68,7 @@ class Bruecke:
     """Aufzeichnung dessen, was das Dashboard an die Bridge weitergegeben haette."""
     aufrufe: list = field(default_factory=list)
     antwort: tuple[str, str] = ("ok", "fertig")
+    updates: dict = field(default_factory=lambda: {"gemessen": None, "spiele": []})
 
     def zuletzt(self) -> tuple:
         return self.aufrufe[-1] if self.aufrufe else ()
@@ -120,7 +121,16 @@ def bruecke(monkeypatch) -> Bruecke:
         b.aufrufe.append(("list_snapshots", game))
         return {"nightly": [], "manual": []}
 
-    for name, fn in (("get_status", status), ("get_always_on", always_on),
+    async def get_updates() -> dict:
+        b.aufrufe.append(("get_updates",))
+        return b.updates
+
+    async def start_update(game: str, wer=None):
+        b.aufrufe.append(("start_update", game, wer))
+        return b.antwort
+
+    for name, fn in (("get_updates", get_updates), ("start_update", start_update),
+                     ("get_status", status), ("get_always_on", always_on),
                      ("post_action", post_action), ("set_reservierung", set_reservierung),
                      ("create_world", create_world), ("snapshot_now", snapshot_now),
                      ("restore_snapshot", restore_snapshot), ("delete_snapshot", delete_snapshot),

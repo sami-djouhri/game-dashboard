@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Server-Updates · {{ brand }}{% endblock %}
+{% block nav_admin %}here{% endblock %}
+{% block extra_head %}{% if laeuft %}<meta http-equiv="refresh" content="15">{% endif %}{% endblock %}
+{% block body %}
+{# Stand je Spiel: installiert gegen aktuell (gemessen vom game-version-watcher, jeden
+   Morgen). Der Knopf startet spiel-aktualisieren auf dem Wirt; Spieler, Wartung,
+   Sicherung und Probestart regelt das Werkzeug selbst, die Seite zeigt nur sein Logende.
+   Waehrend ein Lauf aktiv ist, laedt die Seite alle 15 s neu. #}
+<div class="wrap">
+  <section class="section" style="padding-top:24px;padding-bottom:40px">
+    <div class="section-title">
+      <h2>Server-Updates</h2>
+      <span class="hint">{% if gemessen %}gemessen {{ gemessen }} UTC · {% endif %}zurück zum <a href="/admin">Admin</a></span>
+    </div>
+    {% if fehler %}<div class="banner warn">{{ fehler }}</div>{% endif %}
+    <div class="panel" style="padding:6px 14px">
+      <table class="tbl stapel">
+        <thead><tr><th>Spiel</th><th>Installiert</th><th>Aktuell</th><th>Stand</th><th></th></tr></thead>
+        <tbody>
+        {% for z in zeilen %}
+          <tr>
+            <td><span class="dot" style="background:{{ z.color }}"></span> {{ z.label }}</td>
+            <td class="mono" data-label="Installiert">{{ z.installiert or "–" }}</td>
+            <td class="mono" data-label="Aktuell">{{ z.aktuell or "–" }}</td>
+            <td data-label="Stand">
+              {% if z.hinterher is sameas true %}<span class="tag pending">veraltet</span>
+              {% elif z.hinterher is sameas false %}<span class="tag on">aktuell</span>
+              {% else %}<span class="tag">unbekannt</span>{% endif %}
+              {% if z.mods_hinterher %}<div class="mono">{{ z.mods_hinterher|length }} Mod(s) hinter dem Workshop</div>{% endif %}
+            </td>
+            <td style="min-width:220px">
+              {% set l = z.lauf %}
+              {% if l and l.laeuft %}
+                <span class="tag pending">läuft seit {{ l.start_h }}</span>
+              {% elif z.automatisch and principal.is_owner %}
+                <form class="inline-form" method="post" action="/admin/updates/{{ z.name }}">
+                  <input type="hidden" name="csrf" value="{{ csrf }}">
+                  <button class="{% if z.hinterher is sameas true %}primary{% else %}ghost{% endif %} tiny" type="submit">Update einspielen</button>
+                </form>
+              {% elif not z.automatisch %}
+                <details><summary class="mono">von Hand</summary><div style="max-width:420px">{{ z.hinweis or "Kein Update-Weg hinterlegt." }}</div></details>
+              {% endif %}
+              {% if l and not l.laeuft %}
+                <div class="mono">
+                  {% if l.rc == 0 %}zuletzt {{ l.ende_h }}: fertig
+                  {% elif l.abgebrochen %}Lauf vom {{ l.start_h }} abgebrochen
+                  {% elif l.rc == 4 %}{{ l.ende_h }}: nicht gestartet, es wurde gespielt
+                  {% else %}{{ l.ende_h }}: Fehler (rc {{ l.rc }}){% endif %}
+                  {% if l.wer %} · {{ l.wer }}{% endif %}
+                </div>
+              {% endif %}
+              {% if l and l.log %}
+                <details{% if l.laeuft %} open{% endif %}><summary class="mono">Protokoll</summary><pre class="mono" style="white-space:pre-wrap;max-width:520px">{{ l.log|join("\n") }}</pre></details>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5" style="color:var(--dim);padding:16px">Keine Spiele mit Update-Stand.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

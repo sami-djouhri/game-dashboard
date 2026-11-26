@@ -56,6 +56,7 @@ FORMULARE = [
     ("/admin/users/{uid}/disable", "/admin/users/1/disable", "admin"),
     ("/admin/users/{uid}/role", "/admin/users/1/role", "owner"),
     ("/admin/users/{uid}/delete", "/admin/users/1/delete", "owner"),
+    ("/admin/updates/{game}", "/admin/updates/valheim", "owner"),
 ]
 
 SEITEN = [
@@ -75,6 +76,7 @@ SEITEN = [
     ("/karte/{pfad:path}", "angemeldet"),
     ("/admin", "admin"),
     ("/admin/verlauf", "admin"),
+    ("/admin/updates", "admin"),
 ]
 
 VERWALTUNG = [r for r in API_ROUTEN if r[3] in ("admin", "owner")]

@@ -277,7 +277,6 @@ GUIDES: dict[str, dict] = {
 }
 
 
-
 # EINE Liste, zwei Verwendungen: hier werden die Platzhalter ersetzt, in
 # `all_guides(public=True)` werden Adressen maskiert. Bis zum 2026-10-17 stand die
 # Aufzaehlung an beiden Stellen getrennt, und ein neues Textfeld haette nur in einer
@@ -319,9 +318,6 @@ def _namen_uebernehmen() -> None:
 
 _adressen_einsetzen()
 _namen_uebernehmen()
-
-def guide_for(key: str) -> dict | None:
-    return GUIDES.get(key)
 
 
 def _mask(text: str) -> str:

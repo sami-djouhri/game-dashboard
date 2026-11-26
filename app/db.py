@@ -255,10 +255,6 @@ def count_users() -> int:
     return _one("SELECT COUNT(*) c FROM users")["c"]
 
 
-def count_admins() -> int:
-    return _one("SELECT COUNT(*) c FROM users WHERE role IN ('owner','admin') AND disabled=0")["c"]
-
-
 def get_user(uid: int) -> Optional[sqlite3.Row]:
     return _one("SELECT * FROM users WHERE id=?", (uid,))
 
@@ -334,14 +330,6 @@ def ausnahme_setzen(discord_id: str, name: str, grund: str) -> None:
 def ist_ausnahme(discord_id: str) -> bool:
     return _one("SELECT 1 x FROM gaming_ausnahmen WHERE discord_id=?",
                 (str(discord_id),)) is not None
-
-
-def ausnahmen() -> list[sqlite3.Row]:
-    return _query("SELECT * FROM gaming_ausnahmen ORDER BY seit DESC")
-
-
-def ausnahme_loeschen(discord_id: str) -> None:
-    _exec("DELETE FROM gaming_ausnahmen WHERE discord_id=?", (str(discord_id),))
 
 
 def dm_vermerk_entfernen(uid: int) -> None:
@@ -509,13 +497,6 @@ def open_play_session(game: str, world: str, ausgeloest_von: str = "") -> int:
     cur = _exec("INSERT INTO play_sessions(game,world,started_at,ausgeloest_von) VALUES(?,?,?,?)",
                 (game, world or "", now_iso(), ausgeloest_von[:60]))
     return cur.lastrowid
-
-
-def get_open_play_session() -> Optional[sqlite3.Row]:
-    """Die zuletzt geoeffnete offene Sitzung. ⚠️ Nur noch fuer Einzelfall-Abfragen --
-    seit mehrere Spiele gleichzeitig laufen duerfen, ist 'die offene Sitzung' keine
-    sinnvolle Frage mehr. Der Sampler benutzt offene_play_sessions()."""
-    return _one("SELECT * FROM play_sessions WHERE ended_at IS NULL ORDER BY id DESC LIMIT 1")
 
 
 def offene_play_sessions() -> dict[str, sqlite3.Row]:

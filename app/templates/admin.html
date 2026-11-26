@@ -16,7 +16,7 @@
      Servern fuehrt. Sonderrechte gehen dabei keine verloren: sie haengen an der
      Rolle und stehen auf der Karte, dort seit heute unter der Marke „Admin". #}
   <section class="section" style="padding-top:24px">
-    <div class="section-title"><h2>Lage</h2><span class="hint">gesteuert wird auf <a href="/app">Server</a></span></div>
+    <div class="section-title"><h2>Lage</h2><span class="hint">gesteuert wird auf <a href="/app">Server</a> · <a href="/admin/updates">Server-Updates</a></span></div>
     <div class="banner warn" id="slot-hint"></div>
     {# Eigenes Banner, nicht derselbe Kasten wie #slot-hint: die beiden Meldungen
        koennen gleichzeitig zutreffen, und in einem gemeinsamen Feld verdeckt die
@@ -68,7 +68,7 @@
             <td>{{ a.contact or '–' }}</td>
             <td>{{ a.games or '–' }}</td>
             <td style="max-width:280px">{{ a.message or '–' }}</td>
-            <td><span class="tag {{ a.status }}">{{ a.status }}</span>
+            <td><span class="tag {{ a.status }}">{{ {"pending": "offen", "approved": "angenommen", "rejected": "abgelehnt"}.get(a.status, a.status) }}</span>
                 {% if a.invite_code %}<div class="mono">{{ join_base }}/join/{{ a.invite_code }}</div>{% endif %}</td>
             <td style="white-space:nowrap">
               {% if a.status == 'pending' %}
@@ -119,7 +119,7 @@
         {% for i in invites %}
           <tr>
             <td class="mono">/join/{{ i.code }}</td>
-            <td><span class="tag {% if i.role=='admin' %}pending{% else %}approved{% endif %}">{{ i.role }}</span>{% if i.verified %} ✓{% endif %}</td>
+            <td><span class="tag {% if i.role=='admin' %}pending{% else %}approved{% endif %}">{{ {"member": "Mitglied", "admin": "Admin"}.get(i.role, i.role) }}</span>{% if i.verified %} ✓{% endif %}</td>
             <td>{{ i.uses }}/{{ i.max_uses }}</td>
             {# Leeres expires_at heisst nicht „keine Angabe", sondern „laeuft nie ab"
                (Formularfeld 0 = unbegrenzt). Ein Strich in der Spalte „Laeuft ab" liest

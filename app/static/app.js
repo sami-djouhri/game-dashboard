@@ -383,7 +383,7 @@ function card(g) {
   // frei ist UND jemand spielt; diese Absage kommt im Klartext vom Arbiter zurueck.
   const zuEng = g.state === "sleeping" && g.startbar === false;
   const bedarfHint = zuEng
-    ? `<div class="lowmem">Eng: ${g.label} braucht ${fmtGB(g.schwelle_mb)} frei, so viel ist es gerade nicht.
+    ? `<div class="lowmem">Eng: ${g.label} braucht ${fmtGB(g.schwelle_mb)} frei, gerade ist weniger frei.
        Ein Start räumt zuerst leere Server ab. Wer spielt, wird dabei nie unterbrochen.</div>`
     : "";
 

@@ -212,6 +212,19 @@ def test_zurueckgenommene_id_wird_nicht_neu_angelegt(automatik):
     assert db.get_user_by_discord("888") is None
 
 
+def test_ruecknahme_ohne_merken_versucht_es_erneut(automatik):
+    """Voruebergehender DM-Fehler (Discord 5xx): Konto weg, aber keine Ausnahme,
+    der naechste Abgleich legt ein frisches Konto an."""
+    _automatik_konto("kurz-weg", "777")
+    automatik.post("/api/gaming/ruecknahme", headers={"Authorization": f"Bearer {TOKEN}"},
+                   json={"discord_ids": ["777"], "grund": "DM voruebergehend gescheitert",
+                         "merken": False})
+    assert db.get_user_by_discord("777") is None
+    ergebnis = _abgleich(automatik, [{"discord_id": "777", "name": "kurz-weg"}]).json()
+    assert len(ergebnis["neu"]) == 1, ergebnis
+    assert db.get_user_by_discord("777") is not None
+
+
 # ── Merkzettel fuer den Admin-Bereich ─────────────────────────────────
 def test_stand_wird_vermerkt(automatik):
     """Ohne diesen Eintrag ist „keine Meldung" nicht von „laeuft nicht mehr" zu
